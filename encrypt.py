@@ -25,7 +25,7 @@ def generate_key(password):
 
     key = kdf.derive(str.encode(password))
 
-    print("key - ", key)
+    #print("key - ", key)
 
     return key
 
@@ -36,7 +36,7 @@ def padder():
     padded_message = padder.update(message)
     padded_message += padder.finalize()
 
-    print("padded message - ", padded_message)
+    #print("padded message - ", padded_message)
 
     return padded_message
 
@@ -79,23 +79,26 @@ def main():
         cipher = generate_cipher(key)
         padded_encrypted_message, cipher = encrypt(key, cipher, padded_message)
 
-        file.write(padded_encrypted_message.decode("utf-8", "ignore"))
-        file.write(cipher)
+        file.write(padded_encrypted_message.decode("utf-8", "ignore") + "\n")
+        print(type(cipher))
+        file.write(str(cipher))
 
-    if choice == "2":
+    elif choice == "2":
         file = open("data.txt", "r")
 
         padded_encrypted_message = str.encode(file.readline(0))
         cipher = file.readline(1)
+        cipher = cipher.__class__ = Cipher
 
         padded_decrypted_message = decrypt(padded_encrypted_message, cipher)
         decrypted_message = depadder(padded_decrypted_message)
+
+        print("decrypted data - ", decrypted_message.decode("utf-8", "ignore"))
 
     else:
         print("Invalid input")
         exit()
     
-    print("decrypted data - ", decrypted_message.decode("utf-8", "ignore"))
     file.close()
 
 main()
