@@ -1,10 +1,13 @@
-import os
+import os, random, struct
 import getpass
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
+
+from Crypto.Cipher import AES
+
 backend = default_backend()
 
 #not currently using salt for simplicity
