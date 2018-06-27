@@ -6,8 +6,6 @@ backend = default_backend()
 
 import getpass
 
-password = getpass.getpass("Enter password - ")
-
 def generate_key(password):
     #generate key using scrypt kdf
     kdf = Scrypt(
@@ -20,12 +18,11 @@ def generate_key(password):
     )
 
     key = kdf.derive(str.encode(password))
-
     print("key - ", key)
 
     return key
 
-def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
+def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024): #adapted from here - https://eli.thegreenplace.net/2010/06/25/aes-encryption-of-files-in-python-with-pycrypto
     """ Encrypts a file using AES (CBC mode) with the
         given key.
 
@@ -52,12 +49,12 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
     iv = os.urandom(16) #''.join(chr(random.randint(0, 0xFF)) for i in range(16))
     encryptor = AES.new(key, AES.MODE_CBC, iv)
     filesize = os.path.getsize(in_filename)
-    print(filesize)
 
     with open(in_filename, 'rb') as infile:
         with open(out_filename, 'wb') as outfile:
             outfile.write(struct.pack('<Q', filesize))
             outfile.write(iv)
+            
 
             while True:
                 chunk = infile.read(chunksize)
@@ -67,6 +64,8 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
                     chunk += b' ' * (16 - len(chunk) % 16)
 
                 outfile.write(encryptor.encrypt(chunk))
+
+    #os.remove(in_filename)
 
 def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
     """ Decrypts a file using AES (CBC mode) with the
@@ -82,6 +81,7 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
     with open(in_filename, 'rb') as infile:
         origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(16)
+
         decryptor = AES.new(key, AES.MODE_CBC, iv)
 
         with open(out_filename, 'wb') as outfile:
@@ -93,17 +93,24 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
 
             outfile.truncate(origsize)
 
+    #os.remove(in_filename)
+
 def main():
+    password = getpass.getpass("Enter password - ")
     key = generate_key(password)
 
     choice = input("Please pick an option:\n1. Encrypt\n2. Decrypt\n...  ")
 
-    if choice == 1:
-        in_filename = "test.deb"
+    if choice == "1":
+        in_filename = "test.pdf"
         encrypt_file(key, in_filename, out_filename = None, chunksize =  64*1024)
 
-    elif choice == 2:
-        in_filename = "test.deb.enc"
+    elif choice == "2":
+        in_filename = "test.pdf.enc"
         decrypt_file(key, in_filename, out_filename = None, chunksize = 24*1024)
+
+    else:
+        print("invalid choice")
+        exit()
 
 main()
