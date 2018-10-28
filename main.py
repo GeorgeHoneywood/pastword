@@ -1,6 +1,7 @@
 import sys
 #try:
 from PyQt4 import QtCore, QtGui, uic
+from PyQt4.QtGui import *
 #except ValueError:
 #    print("damn")
 #from openFile import openFile
@@ -11,7 +12,7 @@ qtCreatorFile = "pastword.ui"
  
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
  
-class MyApp(QtGui.QMainWindow, Ui_MainWindow):
+class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
@@ -32,8 +33,21 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
-        with open(dbName, "r") as db:
-            print(db.read())
+        
+        dbConn = sqlite3.connect(dbName)
+        dbCursor = dbConn.cursor()
+
+        dbCursor.execute("SELECT * FROM logins")
+        data = dbCursor.fetchall()
+        print(data)
+
+        for row in range(len(data)):
+            self.addEntry()
+            print(len(data[row]))
+            for col in range(len(data[row])):
+                print(data[row][col])
+                newItem = QTableWidgetItem(data[row][col])
+                self.loginTable.setItem(row, col, newItem)
 
     def saveFile(self):
         data = []
@@ -48,15 +62,14 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
              
         dbFile = "logins.db"
 
-        if os.path.isfile(dbFile) == False:
-            dbConn = sqlite3.connect(dbFile)
-            dbCursor = dbConn.cursor()
+        dbConn = sqlite3.connect(dbFile)
+        dbCursor = dbConn.cursor()
 
-            dbCursor.execute("CREATE TABLE logins (site TEXT NOT NULL, username TEXT, email TEXT, password TEXT, notes TEXT)")
-            dbConn.commit()
-        else:
-            dbConn = sqlite3.connect(dbFile)
-            dbCursor = dbConn.cursor()
+        dbCursor.execute("DROP TABLE logins")
+        dbConn.commit()
+
+        dbCursor.execute("CREATE TABLE logins (site TEXT NOT NULL, username TEXT, email TEXT, password TEXT, notes TEXT)")
+        dbConn.commit()
 
         for item in range(len(data)):
             #print(item)
@@ -66,21 +79,10 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
             dbCursor.execute("INSERT INTO logins VALUES (?,?,?,?,?)", dataTuple)
             dbConn.commit()
 
-        dbCursor.execute("SELECT * FROM logins")
-        print(dbCursor.fetchall())
-
         dbConn.close()
-
-        #print(data)
-        # for row in range(model.rowCount()):
-        #     data.append([])
-        #     for column in range(model.columnCount()):
-        #         index = model.index(row, column)
-        #         # We suppose data are strings
-        #         data[row].append(str(model.data(index).toString()))
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    window = MyApp()
+    window = mainWindow()
     window.show()
     sys.exit(app.exec_())
