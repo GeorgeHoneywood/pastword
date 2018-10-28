@@ -23,17 +23,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.insertRow(rowPosition)
     
     def removeEntry(self):
-        # rowPosition = self.loginTable.rowCount() - 1 
-        # self.loginTable.removeRow(rowPosition)
-
         indexes = self.loginTable.selectionModel().selectedRows()
-        for row in range(len(indexes), 0, -1):
-            #print(row)
-            self.loginTable.removeRow(row - 1)
-
-        # for row in sorted(self.loginTable.selectionModel().selectedRows()):
-        #     print(row)
-        #     self.loginTable.removeRow(row)
+        for row in sorted(indexes):
+            print(row)
+            self.loginTable.removeRow(row.row())
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
