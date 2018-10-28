@@ -7,6 +7,16 @@ backend = default_backend()
 import getpass
 
 def generate_key(password):
+
+    if os.path.exists("salt.txt"):
+        with open("salt.txt", 'r') as saltfile:
+            salt = saltfile.read()
+            #print("salt - " + salt)
+    else:
+        with open("salt.txt", 'w+') as saltfile:
+            print("generating salt")
+            saltfile.write(os.urandom(16).decode("utf-8", "ignore"))
+
     #generate key using scrypt kdf
     kdf = Scrypt(
     salt = b'\x9d\x97#\xbc\xc4B\xdd\xb7\x9c\xff8\x9e\xab\xa6&\x07',
@@ -18,7 +28,7 @@ def generate_key(password):
     )
 
     key = kdf.derive(str.encode(password))
-    print("key - ", key)
+    #print("key - ", key)
 
     return key
 
@@ -55,7 +65,6 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024): #adapt
             outfile.write(struct.pack('<Q', filesize))
             outfile.write(iv)
             
-
             while True:
                 chunk = infile.read(chunksize)
                 if len(chunk) == 0:
@@ -97,15 +106,15 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
 
 def main():
     password = getpass.getpass("Enter password - ")
-    key = generate_key(password)
+    key  = generate_key(password)
 
     choice = input("Please pick an option:\n1. Encrypt\n2. Decrypt\n...  ")
 
-    if choice == "1":
+    if choice == "1": #encrypt
         in_filename = "test.pdf"
         encrypt_file(key, in_filename, out_filename = None, chunksize =  64*1024)
 
-    elif choice == "2":
+    elif choice == "2": #decrypt
         in_filename = "test.pdf.enc"
         decrypt_file(key, in_filename, out_filename = None, chunksize = 24*1024)
 
