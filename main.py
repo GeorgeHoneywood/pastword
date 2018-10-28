@@ -1,12 +1,7 @@
-import sys
-#try:
+import sys, os, sqlite3
+
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
-#except ValueError:
-#    print("damn")
-#from openFile import openFile
-import sqlite3
-import os
 
 qtCreatorFile = "pastword.ui"
  
@@ -28,8 +23,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.insertRow(rowPosition)
     
     def removeEntry(self):
-        rowPosition = self.loginTable.rowCount() - 1 
-        self.loginTable.removeRow(rowPosition)
+        # rowPosition = self.loginTable.rowCount() - 1 
+        # self.loginTable.removeRow(rowPosition)
+
+        indexes = self.loginTable.selectionModel().selectedRows()
+        for row in range(len(indexes), 0, -1):
+            #print(row)
+            self.loginTable.removeRow(row - 1)
+
+        # for row in sorted(self.loginTable.selectionModel().selectedRows()):
+        #     print(row)
+        #     self.loginTable.removeRow(row)
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
@@ -39,15 +43,14 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         dbCursor.execute("SELECT * FROM logins")
         data = dbCursor.fetchall()
-        print(data)
+        #print(data)
 
         for row in range(len(data)):
             self.addEntry()
-            print(len(data[row]))
+            #print(len(data[row]))
             for col in range(len(data[row])):
-                print(data[row][col])
-                newItem = QTableWidgetItem(data[row][col])
-                self.loginTable.setItem(row, col, newItem)
+                #print(data[row][col])
+                self.loginTable.setItem(row, col, QTableWidgetItem(data[row][col]))
 
     def saveFile(self):
         data = []
@@ -58,7 +61,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 try:
                     data[row].append(self.loginTable.item(row, col).text())
                 except AttributeError:
-                    print("oh no")
+                    print("value empty")
              
         dbFile = "logins.db"
 
