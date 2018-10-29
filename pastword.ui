@@ -88,10 +88,10 @@
          <enum>QFrame::Raised</enum>
         </property>
         <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOn</enum>
+         <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
         <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOn</enum>
+         <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
@@ -191,6 +191,7 @@
     <addaction name="actionAdd_entry"/>
     <addaction name="actionRemove_entry"/>
     <addaction name="separator"/>
+    <addaction name="separator"/>
     <addaction name="actionEdit_entry"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -210,7 +211,11 @@
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="sizeGripEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
   <action name="actionOpen">
    <property name="text">
     <string>Open</string>
