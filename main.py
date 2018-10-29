@@ -4,14 +4,23 @@ from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-qtCreatorFile1 = "pastword.ui"
-Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile1)
- 
+def findDataFile(filename): #checks to see whether program is frozen or not, so we know where to load files from
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        datadir = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store your data files:
+        datadir = "resources"
 
-class editEntryDialog(QDialog):
+    return os.path.join(datadir, filename)
+
+Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
+
+class editEntryDialog(QtGui.QDialog):
     def __init__(self, currentWindow):
-        QDialog.__init__(self)
-        uic.loadUi("editEntry.ui", self)
+        QtGui.QDialog.__init__(self)
+        uic.loadUi(findDataFile("editEntry.ui"), self)
 
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(currentWindow.acceptEdit)
@@ -60,6 +69,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtEmail.setText(self.loginTable.item(index, 2).text())
             self.editPopup.txtPassword.setText(self.loginTable.item(index, 3).text())
             self.editPopup.txtNotes.setText(self.loginTable.item(index, 4).text())
+            
         except AttributeError:
             print("Ensure all fields are filled out")
             self.editPopup.txtSite.setText("")
@@ -76,11 +86,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         #print(self.editPopup.txtSite.text())
 
-        self.loginTable.setItem(index, 0, QTableWidgetItem(self.editPopup.txtSite.text()))
-        self.loginTable.setItem(index, 1, QTableWidgetItem(self.editPopup.txtUsername.text()))
-        self.loginTable.setItem(index, 2, QTableWidgetItem(self.editPopup.txtEmail.text()))
-        self.loginTable.setItem(index, 3, QTableWidgetItem(self.editPopup.txtPassword.text()))
-        self.loginTable.setItem(index, 4, QTableWidgetItem(self.editPopup.txtNotes.text()))
+        self.loginTable.setItem(index, 0, QtGui.QTableWidgetItem(self.editPopup.txtSite.text()))
+        self.loginTable.setItem(index, 1, QtGui.QTableWidgetItem(self.editPopup.txtUsername.text()))
+        self.loginTable.setItem(index, 2, QtGui.QTableWidgetItem(self.editPopup.txtEmail.text()))
+        self.loginTable.setItem(index, 3, QtGui.QTableWidgetItem(self.editPopup.txtPassword.text()))
+        self.loginTable.setItem(index, 4, QtGui.QTableWidgetItem(self.editPopup.txtNotes.text()))
 
         self.editPopup.close()
 
@@ -99,13 +109,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #print(len(data[row]))
             for col in range(len(data[row])):
                 #print(data[row][col])
-                self.loginTable.setItem(row, col, QTableWidgetItem(data[row][col]))
+                self.loginTable.setItem(row, col, QtGui.QTableWidgetItem(data[row][col]))
 
     def saveFile(self, saveType):
         if saveType == "saveAs":
-            fileName = QtGui.QFileDialog.getSaveFileName()
+            dbFile = QtGui.QFileDialog.getSaveFileName() + ".db"
         else:
-            fileName = "logins"
+            dbFile = "logins.db"
 
         data = []
 
@@ -116,15 +126,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
                     data[row].append(self.loginTable.item(row, col).text())
                 except AttributeError:
                     print("value empty")
-             
-        dbFile = fileName + ".db"
 
         dbConn = sqlite3.connect(dbFile)
         dbCursor = dbConn.cursor()
 
-        dbCursor.execute("DROP TABLE logins")
-        dbConn.commit()
+        if saveType == "default":
+            dbCursor.execute("DROP TABLE logins")
+            dbConn.commit()
 
+        print("creating table")
         dbCursor.execute("CREATE TABLE logins (site TEXT NOT NULL, username TEXT, email TEXT, password TEXT, notes TEXT)")
         dbConn.commit()
 
