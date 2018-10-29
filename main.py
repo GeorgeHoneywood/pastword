@@ -13,6 +13,8 @@ class editEntryDialog(QDialog):
         QDialog.__init__(self)
         uic.loadUi("editEntry.ui", self)
 
+        self.pbCancel.clicked.connect(self.close)
+        self.pbAccept.clicked.connect(mainWindow.acceptEdit)
         #self.setupUi(self)
         #self.loadEntry()
 
@@ -31,6 +33,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionAdd_entry.triggered.connect(self.addEntry)
         self.actionRemove_entry.triggered.connect(self.removeEntry)
         self.actionEdit_entry.triggered.connect(self.editEntry)
+
+        self.editPopup = editEntryDialog()
     
     def addEntry(self):
         #print("dab")
@@ -40,12 +44,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def removeEntry(self):
         indexes = self.loginTable.selectionModel().selectedRows()
         for row in sorted(indexes, reverse=True):
-            print(row.row())
+            #print(row.row())
             self.loginTable.removeRow(row.row())
 
     def editEntry(self):
-        self.editPopup = editEntryDialog()
-
         indexes = self.loginTable.selectionModel().selectedRows()
         index = indexes[0].row()
 
@@ -56,6 +58,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.txtNotes.setText(self.loginTable.item(index, 4).text())
 
         self.editPopup.exec_()
+    
+    def acceptEdit(self):
+        print(self.editPopup.txtSite.text())
+        self.loginTable.setItem(0, 0, QTableWidgetItem(self.editPopup.txtSite.text()))
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
