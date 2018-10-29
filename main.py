@@ -9,12 +9,12 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile1)
  
 
 class editEntryDialog(QDialog):
-    def __init__(self):
+    def __init__(self, currentWindow):
         QDialog.__init__(self)
         uic.loadUi("editEntry.ui", self)
 
         self.pbCancel.clicked.connect(self.close)
-        self.pbAccept.clicked.connect(mainWindow.acceptEdit)
+        self.pbAccept.clicked.connect(currentWindow.acceptEdit)
         #self.setupUi(self)
         #self.loadEntry()
 
@@ -29,12 +29,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.actionOpen.triggered.connect(self.openFile)
-        self.actionSave.triggered.connect(self.saveFile)
+        self.actionSave.triggered.connect(lambda: self.saveFile("default"))
+        self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
         self.actionAdd_entry.triggered.connect(self.addEntry)
         self.actionRemove_entry.triggered.connect(self.removeEntry)
-        self.actionEdit_entry.triggered.connect(self.editEntry)
 
-        self.editPopup = editEntryDialog()
+        self.actionEdit_entry.triggered.connect(self.editEntry)
+        self.loginTable.doubleClicked.connect(self.editEntry)
+
+        self.editPopup = editEntryDialog(self)
     
     def addEntry(self):
         #print("dab")
@@ -51,17 +54,35 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         indexes = self.loginTable.selectionModel().selectedRows()
         index = indexes[0].row()
 
-        self.editPopup.txtSite.setText(self.loginTable.item(index, 0).text())
-        self.editPopup.txtUsername.setText(self.loginTable.item(index, 1).text())
-        self.editPopup.txtEmail.setText(self.loginTable.item(index, 2).text())
-        self.editPopup.txtPassword.setText(self.loginTable.item(index, 3).text())
-        self.editPopup.txtNotes.setText(self.loginTable.item(index, 4).text())
+        try:
+            self.editPopup.txtSite.setText(self.loginTable.item(index, 0).text())
+            self.editPopup.txtUsername.setText(self.loginTable.item(index, 1).text())
+            self.editPopup.txtEmail.setText(self.loginTable.item(index, 2).text())
+            self.editPopup.txtPassword.setText(self.loginTable.item(index, 3).text())
+            self.editPopup.txtNotes.setText(self.loginTable.item(index, 4).text())
+        except AttributeError:
+            print("Ensure all fields are filled out")
+            self.editPopup.txtSite.setText("")
+            self.editPopup.txtUsername.setText("")
+            self.editPopup.txtEmail.setText("")
+            self.editPopup.txtPassword.setText("")
+            self.editPopup.txtNotes.setText("")
 
         self.editPopup.exec_()
     
     def acceptEdit(self):
-        print(self.editPopup.txtSite.text())
-        self.loginTable.setItem(0, 0, QTableWidgetItem(self.editPopup.txtSite.text()))
+        indexes = self.loginTable.selectionModel().selectedRows()
+        index = indexes[0].row()
+
+        #print(self.editPopup.txtSite.text())
+
+        self.loginTable.setItem(index, 0, QTableWidgetItem(self.editPopup.txtSite.text()))
+        self.loginTable.setItem(index, 1, QTableWidgetItem(self.editPopup.txtUsername.text()))
+        self.loginTable.setItem(index, 2, QTableWidgetItem(self.editPopup.txtEmail.text()))
+        self.loginTable.setItem(index, 3, QTableWidgetItem(self.editPopup.txtPassword.text()))
+        self.loginTable.setItem(index, 4, QTableWidgetItem(self.editPopup.txtNotes.text()))
+
+        self.editPopup.close()
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
@@ -80,7 +101,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 #print(data[row][col])
                 self.loginTable.setItem(row, col, QTableWidgetItem(data[row][col]))
 
-    def saveFile(self):
+    def saveFile(self, saveType):
+        if saveType == "saveAs":
+            fileName = QtGui.QFileDialog.getSaveFileName()
+        else:
+            fileName = "logins"
+
         data = []
 
         for row in range(self.loginTable.rowCount()):
@@ -91,7 +117,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 except AttributeError:
                     print("value empty")
              
-        dbFile = "logins.db"
+        dbFile = fileName + ".db"
 
         dbConn = sqlite3.connect(dbFile)
         dbCursor = dbConn.cursor()
