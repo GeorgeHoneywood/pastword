@@ -34,16 +34,16 @@ class passwordGenerator(QtGui.QDialog):
         charsToUse = ""
         if self.radioIncludeASCII.isChecked():
             charsToUse += string.ascii_letters
-
         if self.radioIncludeNumbers.isChecked():
             charsToUse += string.digits 
-
         if self.radioIncludePunctuation.isChecked():
             charsToUse += string.punctuation
-        
-        print(charsToUse)
+        if charsToUse == "":
+            self.txtGeneratedPassword.clear()
+            self.txtGeneratedPassword.appendPlainText("Select at least one character set")
+            return None
 
-        length = self.sliderPasswordLength.value() #can be set using
+        length = self.sliderPasswordLength.value()
 
         password = "".join(choice(charsToUse) for chars in range(length))
 
