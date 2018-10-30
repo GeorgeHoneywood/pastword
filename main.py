@@ -1,19 +1,10 @@
-import sys, os, sqlite3
+import sys, os, sqlite3, string
+from random import *
 
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-
-def findDataFile(filename): #checks to see whether program is frozen or not, so we know where to load files from
-    if getattr(sys, 'frozen', False):
-        # The application is frozen
-        datadir = os.path.dirname(sys.executable)
-    else:
-        # The application is not frozen
-        # Change this bit to match where you store your data files:
-        datadir = "resources"
-
-    return os.path.join(datadir, filename)
+from findDataFile import findDataFile #!!!!!!!!work out how to do!!!!!!!!!!!!
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -24,12 +15,23 @@ class editEntryDialog(QtGui.QDialog):
 
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(currentWindow.acceptEdit)
-        #self.setupUi(self)
-        #self.loadEntry()
 
-    # def loadEntry(self):
-    #     indexes = mainWindow.loginTable.selectionModel().selectedRows()
-    #     print(indexes)
+class passwordGenerator(QtGui.QDialog):
+    def __init__(self, currentWindow):
+        QtGui.QDialog.__init__(self)
+        uic.loadUi(findDataFile("passwordGenerator.ui"), self)
+
+        self.pbGenerate.clicked.connect(self.generatePassword)
+
+    def generatePassword(self):
+        charsToUse = string.ascii_letters + string.punctuation + string.digits #can be set using buttons
+
+        length = self.sliderPasswordLength.value() #can be set using
+
+        password = "".join(choice(charsToUse) for x in range(length))
+
+        self.txtGeneratedPassword.clear()
+        self.txtGeneratedPassword.appendPlainText(password)
 
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -45,9 +47,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.actionEdit_entry.triggered.connect(self.editEntry)
         self.loginTable.doubleClicked.connect(self.editEntry)
-
         self.editPopup = editEntryDialog(self)
-    
+
+        self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
+        self.pwGenPopup = passwordGenerator(self)
+        
     def addEntry(self):
         #print("dab")
         rowPosition = self.loginTable.rowCount()
@@ -93,6 +97,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.setItem(index, 4, QtGui.QTableWidgetItem(self.editPopup.txtNotes.text()))
 
         self.editPopup.close()
+
+    def passwordGenerator(self):
+        self.pwGenPopup.exec_()
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
