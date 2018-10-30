@@ -178,6 +178,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtGui.QApplication(sys.argv)
+    #app.setApplicationName("your title") #doesn't work
     window = mainWindow()
     window.show()
     sys.exit(app.exec_())
