@@ -32,9 +32,9 @@ executables = [
     Executable('main.py', base=base)
 ]
 
-setup(name='PastWord',
+setup(name='Pastword',
       version='0.1',
-      description='PastWord password manager',
+      description='Pastword password manager, written using PyQt.',
       options=options,
       executables=executables 
 )
