@@ -1,5 +1,5 @@
 import sys, os, sqlite3, string
-from random import *
+from random import choice
 
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
@@ -22,16 +22,37 @@ class passwordGenerator(QtGui.QDialog):
         uic.loadUi(findDataFile("passwordGenerator.ui"), self)
 
         self.pbGenerate.clicked.connect(self.generatePassword)
+        self.sliderPasswordLength.valueChanged.connect(self.generatePassword)
+
+        self.pbCopy2Clipboard.clicked.connect(self.copy2Clipboard)
+
+        self.txtGeneratedPassword.setFont(QtGui.QFont("Monospace"))
+
+        self.generatePassword()
 
     def generatePassword(self):
-        charsToUse = string.ascii_letters + string.punctuation + string.digits #can be set using buttons
+        charsToUse = ""
+        if self.radioIncludeASCII.isChecked():
+            charsToUse += string.ascii_letters
+
+        if self.radioIncludeNumbers.isChecked():
+            charsToUse += string.digits 
+
+        if self.radioIncludePunctuation.isChecked():
+            charsToUse += string.punctuation
+        
+        print(charsToUse)
 
         length = self.sliderPasswordLength.value() #can be set using
 
-        password = "".join(choice(charsToUse) for x in range(length))
+        password = "".join(choice(charsToUse) for chars in range(length))
 
         self.txtGeneratedPassword.clear()
         self.txtGeneratedPassword.appendPlainText(password)
+
+    def copy2Clipboard(self):
+        QtGui.QApplication.clipboard().clear()
+        QtGui.QApplication.clipboard().setText(self.txtGeneratedPassword.toPlainText())
 
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):

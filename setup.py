@@ -19,7 +19,7 @@ base = None
 if sys.platform == 'win32':
     base = 'Win32GUI'
 
-includefiles = ['resources/pastword.ui', 'resources/editEntry.ui']
+includefiles = ['resources/pastword.ui', 'resources/editEntry.ui', 'resources/passwordGenerator.ui']
 
 options = {
     'build_exe': {
