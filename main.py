@@ -1,12 +1,12 @@
-import sys, os, sqlite3, string
-from random import choice
+import sys, os, sqlite3#, string
+#from random import choice
 
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from findDataFile import findDataFile #!!!!!!!!work out how to do!!!!!!!!!!!!
 
-import passwordGenerator
+from passwordGenerator import passwordGenerator
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
