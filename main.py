@@ -6,6 +6,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from findDataFile import findDataFile #!!!!!!!!work out how to do!!!!!!!!!!!!
 
+import passwordGenerator
+
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 class editEntryDialog(QtGui.QDialog):
@@ -16,43 +18,48 @@ class editEntryDialog(QtGui.QDialog):
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(currentWindow.acceptEdit)
 
-class passwordGenerator(QtGui.QDialog):
-    def __init__(self, currentWindow):
-        QtGui.QDialog.__init__(self)
-        uic.loadUi(findDataFile("passwordGenerator.ui"), self)
+# class passwordGenerator(QtGui.QDialog):
+#     def __init__(self, currentWindow):
+#         QtGui.QDialog.__init__(self)
+#         uic.loadUi(findDataFile("passwordGenerator.ui"), self)
 
-        self.pbGenerate.clicked.connect(self.generatePassword)
-        self.sliderPasswordLength.valueChanged.connect(self.generatePassword)
+#         self.pbGenerate.clicked.connect(self.generatePassword)
+#         self.sliderPasswordLength.valueChanged.connect(self.generatePassword)
+#         self.radioIncludeLowerCase.toggled.connect(self.generatePassword)
+#         self.radioIncludeUpperCase.toggled.connect(self.generatePassword)
+#         self.radioIncludeNumbers.toggled.connect(self.generatePassword)
+#         self.radioIncludePunctuation.toggled.connect(self.generatePassword)
 
-        self.pbCopy2Clipboard.clicked.connect(self.copy2Clipboard)
+#         self.pbCopy2Clipboard.clicked.connect(self.copy2Clipboard)
+#         self.txtGeneratedPassword.setFont(QtGui.QFont("Monospace"))
 
-        self.txtGeneratedPassword.setFont(QtGui.QFont("Monospace"))
+#         self.generatePassword()
 
-        self.generatePassword()
+#     def generatePassword(self):
+#         charsToUse = ""
+#         if self.radioIncludeLowerCase.isChecked():
+#             charsToUse += string.ascii_lowercase
+#         if self.radioIncludeUpperCase.isChecked():
+#             charsToUse += string.ascii_uppercase
+#         if self.radioIncludeNumbers.isChecked():
+#             charsToUse += string.digits 
+#         if self.radioIncludePunctuation.isChecked():
+#             charsToUse += string.punctuation
+#         if charsToUse == "":
+#             self.txtGeneratedPassword.clear()
+#             self.txtGeneratedPassword.appendPlainText("Select at least one character set")
+#             return None
 
-    def generatePassword(self):
-        charsToUse = ""
-        if self.radioIncludeASCII.isChecked():
-            charsToUse += string.ascii_letters
-        if self.radioIncludeNumbers.isChecked():
-            charsToUse += string.digits 
-        if self.radioIncludePunctuation.isChecked():
-            charsToUse += string.punctuation
-        if charsToUse == "":
-            self.txtGeneratedPassword.clear()
-            self.txtGeneratedPassword.appendPlainText("Select at least one character set")
-            return None
+#         length = self.sliderPasswordLength.value()
 
-        length = self.sliderPasswordLength.value()
+#         password = "".join(choice(charsToUse) for chars in range(length))
 
-        password = "".join(choice(charsToUse) for chars in range(length))
+#         self.txtGeneratedPassword.clear()
+#         self.txtGeneratedPassword.appendPlainText(password)
 
-        self.txtGeneratedPassword.clear()
-        self.txtGeneratedPassword.appendPlainText(password)
-
-    def copy2Clipboard(self):
-        QtGui.QApplication.clipboard().clear()
-        QtGui.QApplication.clipboard().setText(self.txtGeneratedPassword.toPlainText())
+#     def copy2Clipboard(self):
+#         QtGui.QApplication.clipboard().clear()
+#         QtGui.QApplication.clipboard().setText(self.txtGeneratedPassword.toPlainText())
 
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -178,7 +185,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    #app.setApplicationName("your title") #doesn't work
+    app.setApplicationName("your title") #doesn't work
     window = mainWindow()
     window.show()
     sys.exit(app.exec_())
