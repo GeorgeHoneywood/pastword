@@ -1,3 +1,6 @@
+import string
+from random import choice
+
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
