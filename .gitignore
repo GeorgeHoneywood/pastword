@@ -109,3 +109,6 @@ venv.bak/
 
 #vscode
 .vscode
+
+#don't upload your passwords you numpty
+logins.db
