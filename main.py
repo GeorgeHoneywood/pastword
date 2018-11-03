@@ -39,8 +39,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def addEntry(self):
         #print("dab")
         rowPosition = self.loginTable.rowCount()
-        self.loginTable.insertRow(rowPosition)
-    
+        #self.loginTable.insertRow(rowPosition)
+        self.editPopup.exec_()
+
     def removeEntry(self):
         indexes = self.loginTable.selectionModel().selectedRows()
         for row in sorted(indexes, reverse=True):
@@ -87,7 +88,47 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
+        self.saveFile(dbName)
         
+    def saveFile(self, saveType):
+        pass
+        # if saveType == "saveAs":
+        #     dbFile = QtGui.QFileDialog.getSaveFileName() + ".db"
+        # else:
+        #     dbFile = "logins.db"
+
+        # data = []
+
+        # for row in range(self.loginTable.rowCount()):
+        #     data.append([])
+        #     for col in range(self.loginTable.columnCount()):
+        #         try:
+        #             data[row].append(self.loginTable.item(row, col).text())
+        #         except AttributeError:
+        #             print("value empty")
+
+        # dbConn = sqlite3.connect(dbFile)
+        # dbCursor = dbConn.cursor()
+
+        # if saveType == "default":
+        #     dbCursor.execute("DROP TABLE logins")
+        #     dbConn.commit()
+
+        # print("creating table")
+        # dbCursor.execute("CREATE TABLE logins (site TEXT NOT NULL, username TEXT, email TEXT, password TEXT, notes TEXT)")
+        # dbConn.commit()
+
+        # for item in range(len(data)):
+        #     #print(item)
+        #     dataTuple = tuple(data[item])
+
+        #     #print(dataTuple)
+        #     dbCursor.execute("INSERT INTO logins VALUES (?,?,?,?,?)", dataTuple)
+        #     dbConn.commit()
+
+        # dbConn.close()
+
+    def updateTable(self, dbName):
         dbConn = sqlite3.connect(dbName)
         dbCursor = dbConn.cursor()
 
@@ -95,49 +136,14 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         data = dbCursor.fetchall()
         #print(data)
 
+        dbConn.close()
+
         for row in range(len(data)):
             self.addEntry()
             #print(len(data[row]))
             for col in range(len(data[row])):
                 #print(data[row][col])
                 self.loginTable.setItem(row, col, QtGui.QTableWidgetItem(data[row][col]))
-
-    def saveFile(self, saveType):
-        if saveType == "saveAs":
-            dbFile = QtGui.QFileDialog.getSaveFileName() + ".db"
-        else:
-            dbFile = "logins.db"
-
-        data = []
-
-        for row in range(self.loginTable.rowCount()):
-            data.append([])
-            for col in range(self.loginTable.columnCount()):
-                try:
-                    data[row].append(self.loginTable.item(row, col).text())
-                except AttributeError:
-                    print("value empty")
-
-        dbConn = sqlite3.connect(dbFile)
-        dbCursor = dbConn.cursor()
-
-        if saveType == "default":
-            dbCursor.execute("DROP TABLE logins")
-            dbConn.commit()
-
-        print("creating table")
-        dbCursor.execute("CREATE TABLE logins (site TEXT NOT NULL, username TEXT, email TEXT, password TEXT, notes TEXT)")
-        dbConn.commit()
-
-        for item in range(len(data)):
-            #print(item)
-            dataTuple = tuple(data[item])
-
-            #print(dataTuple)
-            dbCursor.execute("INSERT INTO logins VALUES (?,?,?,?,?)", dataTuple)
-            dbConn.commit()
-
-        dbConn.close()
 
 def main():
     app = QtGui.QApplication(sys.argv)
