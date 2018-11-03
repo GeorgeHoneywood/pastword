@@ -38,7 +38,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
     def addEntry(self):
         #print("dab")
-        rowPosition = self.loginTable.rowCount()
+        #rowPosition = self.loginTable.rowCount()
         #self.loginTable.insertRow(rowPosition)
         self.editPopup.exec_()
 
@@ -70,16 +70,49 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
     
     def acceptEdit(self):
-        indexes = self.loginTable.selectionModel().selectedRows()
-        index = indexes[0].row()
+        dbFile = "logins.db"
+
+        dbConn = sqlite3.connect(dbFile)
+        dbCursor = dbConn.cursor()
+
+        dbCursor.execute("DROP TABLE IF EXISTS logins")
+        dbConn.commit()
+
+        dbCursor.execute("CREATE TABLE logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
+        dbConn.commit()
+        
+        indexList = self.loginTable.selectionModel().selectedRows()
+        
+        if indexList == []:
+            loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text())
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?)", loginData)
+            
+        else:
+            index = indexList[0].row()
+            loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), index)
+            dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
+        
+        dbConn.commit()
 
         #print(self.editPopup.txtSite.text())
 
-        self.loginTable.setItem(index, 0, QtGui.QTableWidgetItem(self.editPopup.txtSite.text()))
-        self.loginTable.setItem(index, 1, QtGui.QTableWidgetItem(self.editPopup.txtUsername.text()))
-        self.loginTable.setItem(index, 2, QtGui.QTableWidgetItem(self.editPopup.txtEmail.text()))
-        self.loginTable.setItem(index, 3, QtGui.QTableWidgetItem(self.editPopup.txtPassword.text()))
-        self.loginTable.setItem(index, 4, QtGui.QTableWidgetItem(self.editPopup.txtNotes.text()))
+        # self.loginTable.setItem(index, 0, QtGui.QTableWidgetItem(self.editPopup.txtSite.text()))
+        # self.loginTable.setItem(index, 1, QtGui.QTableWidgetItem(self.editPopup.txtUsername.text()))
+        # self.loginTable.setItem(index, 2, QtGui.QTableWidgetItem(self.editPopup.txtEmail.text()))
+        # self.loginTable.setItem(index, 3, QtGui.QTableWidgetItem(self.editPopup.txtPassword.text()))
+        # self.loginTable.setItem(index, 4, QtGui.QTableWidgetItem(self.editPopup.txtNotes.text()))
+
+        # if saveType == "saveAs":
+        #     dbFile = QtGui.QFileDialog.getSaveFileName() + ".db"
+        # else:
+        #     dbFile = "logins.db"
+
+        dbCursor.execute("SELECT * FROM logins")
+        data = dbCursor.fetchall()
+        #print(data)
+        dbConn.close()
+
+        self.updateTable(dbName = "logins.db")
 
         self.editPopup.close()
 
@@ -88,7 +121,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def openFile(self):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
-        self.saveFile(dbName)
+        self.updateTable(dbName)
         
     def saveFile(self, saveType):
         pass
@@ -139,7 +172,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConn.close()
 
         for row in range(len(data)):
-            self.addEntry()
+            self.loginTable.insertRow(self.loginTable.rowCount())
             #print(len(data[row]))
             for col in range(len(data[row])):
                 #print(data[row][col])
