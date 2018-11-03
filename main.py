@@ -94,19 +94,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         dbConn.commit()
 
-        #print(self.editPopup.txtSite.text())
-
-        # self.loginTable.setItem(index, 0, QtGui.QTableWidgetItem(self.editPopup.txtSite.text()))
-        # self.loginTable.setItem(index, 1, QtGui.QTableWidgetItem(self.editPopup.txtUsername.text()))
-        # self.loginTable.setItem(index, 2, QtGui.QTableWidgetItem(self.editPopup.txtEmail.text()))
-        # self.loginTable.setItem(index, 3, QtGui.QTableWidgetItem(self.editPopup.txtPassword.text()))
-        # self.loginTable.setItem(index, 4, QtGui.QTableWidgetItem(self.editPopup.txtNotes.text()))
-
-        # if saveType == "saveAs":
-        #     dbFile = QtGui.QFileDialog.getSaveFileName() + ".db"
-        # else:
-        #     dbFile = "logins.db"
-
         dbCursor.execute("SELECT * FROM logins")
         data = dbCursor.fetchall()
         #print(data)
