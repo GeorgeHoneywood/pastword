@@ -117,7 +117,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def saveFile(self, saveType): #savetype ignored for now
         baseName = os.path.basename(dbName)
         copyfile(dbName, baseName[1:]) #only get chars after 1, to overwrite original
-        #os.remove(dbName) #can't do this because it means users can't change edit any more
 
     def updateTable(self):
         dbConn = sqlite3.connect(dbName)
@@ -148,3 +147,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    os.remove(dbName) #remove temporary .file after exit of program
