@@ -79,17 +79,20 @@
         <property name="cornerButtonEnabled">
          <bool>false</bool>
         </property>
+        <property name="columnCount">
+         <number>6</number>
+        </property>
         <attribute name="horizontalHeaderVisible">
          <bool>true</bool>
         </attribute>
         <attribute name="horizontalHeaderCascadingSectionResizes">
-         <bool>false</bool>
+         <bool>true</bool>
         </attribute>
         <attribute name="horizontalHeaderDefaultSectionSize">
          <number>150</number>
         </attribute>
         <attribute name="horizontalHeaderMinimumSectionSize">
-         <number>40</number>
+         <number>30</number>
         </attribute>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
@@ -102,27 +105,50 @@
         </attribute>
         <column>
          <property name="text">
+          <string>ID</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
+         </property>
+        </column>
+        <column>
+         <property name="text">
           <string>Site</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
          </property>
         </column>
         <column>
          <property name="text">
           <string>Username</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
+         </property>
         </column>
         <column>
          <property name="text">
           <string>Email</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
          </property>
         </column>
         <column>
          <property name="text">
           <string>Password</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
+         </property>
         </column>
         <column>
          <property name="text">
           <string>Notes</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignLeft|AlignVCenter</set>
          </property>
         </column>
        </widget>
@@ -137,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>1010</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
