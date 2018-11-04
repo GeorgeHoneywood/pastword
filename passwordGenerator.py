@@ -36,7 +36,7 @@ class passwordGenerator(QtGui.QDialog):
         if charsToUse == "":
             self.txtGeneratedPassword.clear()
             self.txtGeneratedPassword.appendPlainText("Select at least one character set")
-            return None
+            return None #exit sub because you can't generate password with no vals
 
         length = self.sliderPasswordLength.value()
 

@@ -5,13 +5,13 @@ from shutil import copyfile
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-from findDataFile import findDataFile #!!!!!!!!work out how to do!!!!!!!!!!!!
+from findDataFile import findDataFile
 
 from passwordGenerator import passwordGenerator
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
-dbName = ""
+dbName = "" #make file name global variable
 
 class editEntryDialog(QtGui.QDialog):
     def __init__(self, currentWindow):
@@ -44,9 +44,19 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
 
     def removeEntry(self):
-        indexes = self.loginTable.selectionModel().selectedRows()
-        for row in sorted(indexes, reverse=True):
-            self.loginTable.removeRow(row.row())
+        dbConn, dbCursor = self.dbConnect()
+
+        i = 0
+        indexList = self.loginTable.selectionModel().selectedRows()
+        for row in sorted(indexList):
+            index = indexList[i].row() + 1
+            dbCursor.execute("DELETE FROM logins WHERE login_id = ?", (index, )) #make sure it is tuple rather than int
+            i += 1
+            # self.loginTable.removeRow(row.row())
+
+        dbConn.commit()
+        dbConn.close()
+        self.updateTable()
 
     def editEntry(self):
         indexes = self.loginTable.selectionModel().selectedRows()
@@ -70,14 +80,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
     
     def acceptEdit(self):
-        dbConn = sqlite3.connect(dbName)
-        dbCursor = dbConn.cursor()
+        dbConn, dbCursor = self.dbConnect()
 
         # dbCursor.execute("DROP TABLE IF EXISTS logins")
         # dbConn.commit()
         
         indexList = self.loginTable.selectionModel().selectedRows()
-        
         if indexList == []:
             loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text())
             dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?)", loginData)
@@ -106,8 +114,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         dbName = dirName + "/." + baseName
 
-        dbConn = sqlite3.connect(dbName)
-        dbCursor = dbConn.cursor()
+        dbConn, dbCursor = self.dbConnect()
         dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
         dbConn.commit()
         dbConn.close()
@@ -115,18 +122,22 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable()
         
     def saveFile(self, saveType): #savetype ignored for now
+        dirName = os.path.dirname(dbName)
         baseName = os.path.basename(dbName)
-        copyfile(dbName, baseName[1:]) #only get chars after 1, to overwrite original
+        copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
 
     def updateTable(self):
-        dbConn = sqlite3.connect(dbName)
-        dbCursor = dbConn.cursor()
+        dbConn, dbCursor = self.dbConnect()
 
         dbCursor.execute("SELECT * FROM logins")
         data = dbCursor.fetchall()
 
         dbConn.close()
 
+        #first delete all rows from table
+        self.loginTable.setRowCount(0)
+
+        #load in all items from db, only creating if necessary 
         for rowNumber, rowData in enumerate(data):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
@@ -134,6 +145,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         header = self.loginTable.horizontalHeader()
         header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+
+    def dbConnect(self):
+        dbConn = sqlite3.connect(dbName)
+        dbCursor = dbConn.cursor()
+        return dbConn, dbCursor
 
 def main():
     app = QtGui.QApplication(sys.argv)
