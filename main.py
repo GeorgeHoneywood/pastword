@@ -39,8 +39,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
+
+        self.pbSearch.clicked.connect(self.searchDB)
+        self.txtSearch.returnPressed.connect(self.searchDB)
         
     def addEntry(self): #effectively the same as edit entry, but dont need to load values into popup
+        self.clearEditPopup() #remove entries from the popup before displaying
         self.editPopup.exec_()
 
     def removeEntry(self):
@@ -49,18 +53,23 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         i = 0
         indexList = self.loginTable.selectionModel().selectedRows()
         for row in sorted(indexList):
-            index = indexList[i].row() + 1
+            index = indexList[i].row()
+            index = int(self.loginTable.item(index, 0).text())
             dbCursor.execute("DELETE FROM logins WHERE login_id = ?", (index, )) #make sure it is tuple rather than int
             i += 1
             # self.loginTable.removeRow(row.row())
 
         dbConn.commit()
         dbConn.close()
-        self.updateTable()
+        self.updateTable(searchQ = None)
 
     def editEntry(self):
         indexes = self.loginTable.selectionModel().selectedRows()
-        index = indexes[0].row()
+        try:
+            index = indexes[0].row()
+        except IndexError:
+            print("Please select an item before trying to edit it")
+            return None
 
         try:
             self.editPopup.txtSite.setText(self.loginTable.item(index, 1).text())
@@ -71,13 +80,16 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         except AttributeError:
             print("Ensure all fields are filled out")
+            self.clearEditPopup()
+
+        self.editPopup.exec_()
+
+    def clearEditPopup(self):
             self.editPopup.txtSite.setText("")
             self.editPopup.txtUsername.setText("")
             self.editPopup.txtEmail.setText("")
             self.editPopup.txtPassword.setText("")
             self.editPopup.txtNotes.setText("")
-
-        self.editPopup.exec_()
     
     def acceptEdit(self):
         dbConn, dbCursor = self.dbConnect()
@@ -86,19 +98,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # dbConn.commit()
         
         indexList = self.loginTable.selectionModel().selectedRows()
-        if indexList == []:
+        if indexList == []: #if there are not not rows selcted
             loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text())
             dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?)", loginData)
             
-        else:
-            index = indexList[0].row()
-            loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), index + 1)
+        else: #if the user has selected rows
+            indexTable = indexList[0].row()
+            indexDB = int(self.loginTable.item(indexTable, 0).text())
+            loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), indexDB)
             dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
         
         dbConn.commit()
         dbConn.close()
 
-        self.updateTable()
+        self.updateTable(searchQ = None)
         self.editPopup.close()
 
     def passwordGenerator(self):
@@ -119,23 +132,30 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConn.commit()
         dbConn.close()
 
-        self.updateTable()
+        self.updateTable(searchQ = None)
         
     def saveFile(self, saveType): #savetype ignored for now
         dirName = os.path.dirname(dbName)
         baseName = os.path.basename(dbName)
         copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
 
-    def updateTable(self):
+    def updateTable(self, searchQ):
         dbConn, dbCursor = self.dbConnect()
 
-        dbCursor.execute("SELECT * FROM logins")
+        if searchQ == None:
+            dbCursor.execute("SELECT * FROM logins")
+        else:
+            dbCursor.execute("SELECT * FROM logins WHERE site LIKE ?", (searchQ, ) )
         data = dbCursor.fetchall()
 
         dbConn.close()
 
         #first delete all rows from table
         self.loginTable.setRowCount(0)
+
+        if data == []:
+            self.loginTable.insertRow(self.loginTable.rowCount())
+            self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
         #load in all items from db, only creating if necessary 
         for rowNumber, rowData in enumerate(data):
@@ -151,6 +171,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursor = dbConn.cursor()
         return dbConn, dbCursor
 
+    def searchDB(self):
+        searchQ = self.txtSearch.text()
+        if searchQ == '': #if nothing in text box, return none for query
+            searchQ = None
+        else:
+            searchQ = "%" + searchQ + "%" 
+        self.updateTable(searchQ)
+
+    def newDB(self):
+        pass
+
 def main():
     app = QtGui.QApplication(sys.argv)
     #app.setApplicationName("your title") #doesn't work
@@ -163,4 +194,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    os.remove(dbName) #remove temporary .file after exit of program
+    if dbName != "":
+        os.remove(dbName) #remove temporary .file after exit of program
