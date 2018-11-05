@@ -258,11 +258,19 @@
    </property>
   </widget>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/database/icons/database_connect.png</normaloff>:/database/icons/database_connect.png</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
   </action>
   <action name="actionSave">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/database/icons/database_save.png</normaloff>:/database/icons/database_save.png</iconset>
+   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -306,11 +314,17 @@
    </property>
   </action>
   <action name="actionNewDB">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/database/icons/database_add.png</normaloff>:/database/icons/database_add.png</iconset>
+   </property>
    <property name="text">
     <string>New</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

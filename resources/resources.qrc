@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="database">
+    <file>icons/database_connect.png</file>
+    <file>icons/database_save.png</file>
+    <file>icons/database_add.png</file>
+  </qresource>
+  <qresource prefix="table">
+    <file>icons/table_add.png</file>
+    <file>icons/table_delete.png</file>
+    <file>icons/table_edit.png</file>
+  </qresource>
+</RCC>

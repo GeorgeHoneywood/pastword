@@ -32,6 +32,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
         self.actionAdd_entry.triggered.connect(self.addEntry)
         self.actionRemove_entry.triggered.connect(self.removeEntry)
+        self.actionNewDB.triggered.connect(self.newDB)
 
         self.actionEdit_entry.triggered.connect(self.editEntry)
         self.loginTable.doubleClicked.connect(self.editEntry)
@@ -121,16 +122,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
 
+        if dbName == '':
+            print("Please select a file")
+            return None
+
         dirName = os.path.dirname(dbName)
         baseName = os.path.basename(dbName)
         copyfile(dbName, dirName + "/." + baseName)
 
         dbName = dirName + "/." + baseName
-
-        dbConn, dbCursor = self.dbConnect()
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
-        dbConn.commit()
-        dbConn.close()
 
         self.updateTable(searchQ = None)
         
@@ -180,7 +180,18 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ)
 
     def newDB(self):
-        pass
+        global dbName
+        dbName = QtGui.QFileDialog.getSaveFileName(self, 'New database')
+
+        dirName = os.path.dirname(dbName)
+        baseName = os.path.basename(dbName)
+        
+        dbName = dirName + "/." + baseName
+
+        dbConn, dbCursor = self.dbConnect()
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
+        dbConn.commit()
+        dbConn.close()
 
 def main():
     app = QtGui.QApplication(sys.argv)
