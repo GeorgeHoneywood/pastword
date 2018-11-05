@@ -9,7 +9,7 @@ from PyQt4.QtCore import *
 from findDataFile import findDataFile
 
 from passwordGenerator import passwordGenerator
-import resources
+import resources_rc #import icons
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -45,6 +45,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.pbSearch.clicked.connect(self.searchDB)
         self.txtSearch.returnPressed.connect(self.searchDB)
+        self.txtSearch.textChanged.connect(self.searchDB)
+        self.cbAutoSearch.stateChanged.connect(self.autoSearch)
+
+        self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
         
     def addEntry(self): #effectively the same as edit entry, but dont need to load values into popup
         self.clearEditPopup() #remove entries from the popup before displaying
@@ -181,6 +185,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             searchQ = "%" + searchQ + "%" 
         self.updateTable(searchQ)
 
+    def autoSearch(self, state):
+        if state == QtCore.Qt.Checked:
+            self.txtSearch.textChanged.connect(self.searchDB)
+        else:
+            self.txtSearch.textChanged.disconnect(self.searchDB)
+
     def newDB(self):
         global dbName
         dbName = QtGui.QFileDialog.getSaveFileName(self, 'New database')
@@ -194,6 +204,14 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
         dbConn.commit()
         dbConn.close()
+    
+    def contextMenuEvent(self, event):
+        contextMenu = QtGui.QMenu("DB Entry")
+        edit = contextMenu.addAction("Edit entry")
+
+        edit.triggered.connect(self.editEntry)
+        
+        contextMenu.exec_(event.screenPos())
 
 def main():
     app = QtGui.QApplication(sys.argv)

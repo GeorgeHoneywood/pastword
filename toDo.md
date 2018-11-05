@@ -6,4 +6,4 @@ Here is a small list of improvements or features that I need to add to my progra
 * DONE - Add checking to ensure that the user has selected a box when they click edit entry, maybe with try/execpt.
 * DONE - Add a search function, with a bar which can be entered into (QLineEdit), then click a button or press enter to commence the search. This should probably be handed by an optional parameter passed into the "updateTable" routine, like a "WHERE" SQL statement.
 * Check to see if file has been opened or not, otherwise, don't allow user to edit entries.
-* Add icons to program
+* Add icons to program, using 'pyrcc4 -py3'

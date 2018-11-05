@@ -95,6 +95,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>txtSite</tabstop>
+  <tabstop>txtUsername</tabstop>
+  <tabstop>txtEmail</tabstop>
+  <tabstop>txtPassword</tabstop>
+  <tabstop>txtNotes</tabstop>
+  <tabstop>pbAccept</tabstop>
+  <tabstop>pbCancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
