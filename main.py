@@ -192,7 +192,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbName = dirName + "/." + baseName
 
         dbConn, dbCursor = self.dbConnect()
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, deleted BOOLEAN)")
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, modified BOOLEAN)")
         dbConn.commit()
         dbConn.close()
     

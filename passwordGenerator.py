@@ -2,11 +2,12 @@ import string
 from random import choice
 
 from PyQt4 import QtCore, QtGui, uic
-from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+import resources_rc  # import icons
 from findDataFile import findDataFile
 
-import resources_rc #import icons
 
 class passwordGenerator(QtGui.QDialog):
     def __init__(self, currentWindow):
