@@ -105,8 +105,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         indexList = self.loginTable.selectionModel().selectedRows()
         if indexList == []: #if there are not not rows selcted
-            loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text())
-            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?)", loginData)
+            loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
             
         else: #if the user has selected rows
             indexTable = indexList[0].row()
@@ -145,15 +145,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
 
     def updateTable(self, searchQ):
-        dbConn, dbCursor = self.dbConnect()
-
-        if searchQ == None:
-            dbCursor.execute("SELECT * FROM logins")
-        else:
-            dbCursor.execute("SELECT * FROM logins WHERE site LIKE ?", (searchQ, ) )
-        data = dbCursor.fetchall()
-
-        dbConn.close()
+        data = self.returnItems(searchQ)
 
         #first delete all rows from table
         self.loginTable.setRowCount(0)
@@ -200,7 +192,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbName = dirName + "/." + baseName
 
         dbConn, dbCursor = self.dbConnect()
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT)")
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, deleted BOOLEAN)")
         dbConn.commit()
         dbConn.close()
     
@@ -223,9 +215,21 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         warning.exec_()
 
-    def undoRedo(self):
+    # def undoRedo(self):
+    #     dbConn, dbCursor = self.dbConnect()
+    #     return table
+
+    def returnItems(self, searchQ):
         dbConn, dbCursor = self.dbConnect()
-        return table
+
+        if searchQ == None:
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins")
+        else:
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ?", (searchQ, ) )
+        data = dbCursor.fetchall()
+        dbConn.close()
+
+        return data
 
 def main():
     app = QtGui.QApplication(sys.argv)
