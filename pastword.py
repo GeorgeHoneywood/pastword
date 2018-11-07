@@ -10,6 +10,8 @@ from PyQt4.QtGui import *
 import resources_rc  # import icons
 from findDataFile import findDataFile
 from passwordGenerator import passwordGenerator
+from warningBox import warningBox
+from dbConnect import dbConnect
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -23,7 +25,6 @@ class editEntryDialog(QtGui.QDialog):
 
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(currentWindow.acceptEdit)
-
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -44,6 +45,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup = editEntryDialog(self)
 
         self.actionUndo.triggered.connect(self.undo)
+        #self.actionRedo.triggered.connect(self.redo) #need to impliment redo
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
@@ -54,14 +56,80 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
+
+    def newDB(self):
+        global dbName
+        dbName = QtGui.QFileDialog.getSaveFileName(self, 'New database')
+
+        dirName = os.path.dirname(dbName)
+        baseName = os.path.basename(dbName)
         
+        dbName = dirName + "/." + baseName
+
+        dbConn, dbCursor = dbConnect(dbName)
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
+        dbConn.commit()
+        dbConn.close()
+        
+    def openFile(self):
+        global dbName
+        dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
+
+        if dbName == '':
+            warningBox("Please select a file", None)
+            return None
+
+        dirName = os.path.dirname(dbName)
+        baseName = os.path.basename(dbName)
+        copyfile(dbName, dirName + "/." + baseName)
+
+        dbName = dirName + "/." + baseName
+
+        self.updateTable(searchQ = None)
+        
+    def saveFile(self, saveType): #savetype ignored for now
+        dirName = os.path.dirname(dbName)
+        baseName = os.path.basename(dbName)
+        copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
+
+    def returnItems(self, searchQ):
+        dbConn, dbCursor = dbConnect(dbName)
+
+        if searchQ == None:
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+        else:
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
+        dbData = dbCursor.fetchall()
+        dbConn.close()
+
+        return dbData
+
+    def updateTable(self, searchQ):
+        dbData = self.returnItems(searchQ)
+
+        #first delete all rows from table
+        self.loginTable.setRowCount(0)
+
+        if dbData == []:
+            self.loginTable.insertRow(self.loginTable.rowCount())
+            self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
+
+        #load in all items from db, only creating if necessary 
+        for rowNumber, rowData in enumerate(dbData):
+            self.loginTable.insertRow(self.loginTable.rowCount())
+            for colNumber, cellData in enumerate(rowData):
+                self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str(cellData)))
+
+        header = self.loginTable.horizontalHeader()
+        header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+
     def addEntry(self): #effectively the same as edit entry, but dont need to load values into popup
         self.clearEditPopup() #remove entries from the popup before displaying
         self.editPopup.exec_()
 
     def removeEntry(self):
         global modifiedItems
-        dbConn, dbCursor = self.dbConnect()
+        dbConn, dbCursor = dbConnect(dbName)
 
         i = 0
         indexList = self.loginTable.selectionModel().selectedRows()
@@ -81,7 +149,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         try:
             index = indexes[0].row()
         except IndexError as detail:
-            self.warningBox("Please select an item before trying to edit it", detail)
+            warningBox("Please select an item before trying to edit it", detail)
             return None
         try:
             self.editPopup.txtSite.setText(self.loginTable.item(index, 1).text())
@@ -90,7 +158,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtPassword.setText(self.loginTable.item(index, 4).text())
             self.editPopup.txtNotes.setText(self.loginTable.item(index, 5).text())
         except AttributeError as detail:
-            self.warningBox("Ensure all fields are filled out", detail)
+            warningBox("Ensure all fields are filled out", detail)
             self.clearEditPopup()
 
         self.editPopup.exec_()
@@ -103,7 +171,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtNotes.setText("")
     
     def acceptEdit(self):
-        dbConn, dbCursor = self.dbConnect()
+        dbConn, dbCursor = dbConnect(dbName)
 
         loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
         
@@ -129,51 +197,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def passwordGenerator(self):
         self.pwGenPopup.exec_()
 
-    def openFile(self):
-        global dbName
-        dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
-
-        if dbName == '':
-            self.warningBox("Please select a file", None)
-            return None
-
-        dirName = os.path.dirname(dbName)
-        baseName = os.path.basename(dbName)
-        copyfile(dbName, dirName + "/." + baseName)
-
-        dbName = dirName + "/." + baseName
-
-        self.updateTable(searchQ = None)
-        
-    def saveFile(self, saveType): #savetype ignored for now
-        dirName = os.path.dirname(dbName)
-        baseName = os.path.basename(dbName)
-        copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
-
-    def updateTable(self, searchQ):
-        data = self.returnItems(searchQ)
-
-        #first delete all rows from table
-        self.loginTable.setRowCount(0)
-
-        if data == []:
-            self.loginTable.insertRow(self.loginTable.rowCount())
-            self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
-
-        #load in all items from db, only creating if necessary 
-        for rowNumber, rowData in enumerate(data):
-            self.loginTable.insertRow(self.loginTable.rowCount())
-            for colNumber, cellData in enumerate(rowData):
-                self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str(cellData)))
-
-        header = self.loginTable.horizontalHeader()
-        header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-
-    def dbConnect(self):
-        dbConn = sqlite3.connect(dbName)
-        dbCursor = dbConn.cursor()
-        return dbConn, dbCursor
-
     def searchDB(self):
         searchQ = self.txtSearch.text()
         if searchQ == '': #if nothing in text box, return none for query
@@ -187,20 +210,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.txtSearch.textChanged.connect(self.searchDB)
         else:
             self.txtSearch.textChanged.disconnect(self.searchDB)
-
-    def newDB(self):
-        global dbName
-        dbName = QtGui.QFileDialog.getSaveFileName(self, 'New database')
-
-        dirName = os.path.dirname(dbName)
-        baseName = os.path.basename(dbName)
-        
-        dbName = dirName + "/." + baseName
-
-        dbConn, dbCursor = self.dbConnect()
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
-        dbConn.commit()
-        dbConn.close()
     
     def contextMenuEvent(self, event):
         contextMenu = QtGui.QMenu("DB Entry")
@@ -210,19 +219,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         contextMenu.exec_(event.screenPos())
 
-    def warningBox(self, message, detail):
-        warning = QtGui.QMessageBox()
-        warning.setIcon(QtGui.QMessageBox.Warning)
-        warning.setWindowTitle("Warning")
-
-        warning.setText("Warning - " + message)
-        if detail != None:
-            warning.setDetailedText("Cause of exception:\n" + str(detail))
-
-        warning.exec_()
-
     def undo(self):
-        dbConn, dbCursor = self.dbConnect()
+        dbConn, dbCursor = dbConnect(dbName)
+
+        if len(modifiedItems) == 0:
+            warningBox("No more actions to undo", None)
 
         index = modifiedItems[len(modifiedItems) - 1] #return last item in list
         dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (index, ))
@@ -232,18 +233,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConn.close()
         self.updateTable(searchQ = None)
         
-    def returnItems(self, searchQ):
-        dbConn, dbCursor = self.dbConnect()
-
-        if searchQ == None:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
-        else:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
-        data = dbCursor.fetchall()
-        dbConn.close()
-
-        return data
-
 def main():
     app = QtGui.QApplication(sys.argv)
     #app.setApplicationName("your title") #doesn't work
