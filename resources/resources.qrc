@@ -4,6 +4,12 @@
     <file>icons/database_save.png</file>
     <file>icons/database_add.png</file>
   </qresource>
+  <qresource prefix="application">
+    <file>icons/icon.png</file>
+  </qresource>
+  <qresource prefix="search">
+    <file>icons/search.png</file>
+  </qresource>
   <qresource prefix="table">
     <file>icons/table_add.png</file>
     <file>icons/table_delete.png</file>
