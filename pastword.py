@@ -25,6 +25,7 @@ class editEntryDialog(QtGui.QDialog):
 
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(currentWindow.acceptEdit)
+
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -46,6 +47,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.actionUndo.triggered.connect(self.undo)
         #self.actionRedo.triggered.connect(self.redo) #need to impliment redo
+
+        self.actionAbout.triggered.connect(self.about)
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
@@ -224,6 +227,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         if len(modifiedItems) == 0:
             warningBox("No more actions to undo", None)
+            return None
 
         index = modifiedItems[len(modifiedItems) - 1] #return last item in list
         dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (index, ))
@@ -232,7 +236,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConn.commit()
         dbConn.close()
         self.updateTable(searchQ = None)
-        
+
+    def about(self):
+        aboutBox = QtGui.QMessageBox()
+        aboutBox.setIcon(QtGui.QMessageBox.Information)
+        aboutBox.setWindowTitle("About Pastword")
+
+        aboutBox.setText("Pastword is a basic password manager, which has been written for my A-Level Computer Science courswork. This program is written in Python3, uses PyQt4 for the interface, and SQLite for storage of the database.")
+        aboutBox.setInformativeText("This program was written in 2018 by George Honeywood.")
+
+        aboutBox.exec_()
+
 def main():
     app = QtGui.QApplication(sys.argv)
     #app.setApplicationName("your title") #doesn't work
