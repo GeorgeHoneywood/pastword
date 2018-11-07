@@ -74,8 +74,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         indexes = self.loginTable.selectionModel().selectedRows()
         try:
             index = indexes[0].row()
-        except IndexError:
-            print("Please select an item before trying to edit it")
+        except IndexError as detail:
+            self.warningBox("Please select an item before trying to edit it", detail)
             return None
 
         try:
@@ -84,9 +84,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtEmail.setText(self.loginTable.item(index, 3).text())
             self.editPopup.txtPassword.setText(self.loginTable.item(index, 4).text())
             self.editPopup.txtNotes.setText(self.loginTable.item(index, 5).text())
-            
-        except AttributeError:
-            print("Ensure all fields are filled out")
+        except AttributeError as detail:
+            self.warningBox("Ensure all fields are filled out", detail)
             self.clearEditPopup()
 
         self.editPopup.exec_()
@@ -129,7 +128,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
 
         if dbName == '':
-            print("Please select a file")
+            self.warningBox("Please select a file", None)
             return None
 
         dirName = os.path.dirname(dbName)
@@ -212,6 +211,21 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         edit.triggered.connect(self.editEntry)
         
         contextMenu.exec_(event.screenPos())
+
+    def warningBox(self, message, detail):
+        warning = QtGui.QMessageBox()
+        warning.setIcon(QtGui.QMessageBox.Warning)
+        warning.setWindowTitle("Warning")
+
+        warning.setText("Warning - " + message)
+        if detail != None:
+            warning.setDetailedText("Cause of exception:\n" + str(detail))
+
+        warning.exec_()
+
+    def undoRedo(self):
+        dbConn, dbCursor = self.dbConnect()
+        return table
 
 def main():
     app = QtGui.QApplication(sys.argv)
