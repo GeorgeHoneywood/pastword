@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
-    <height>1080</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -58,7 +58,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>100</width>
+          <width>120</width>
           <height>20</height>
          </size>
         </property>
@@ -66,11 +66,20 @@
       </item>
       <item>
        <widget class="QLineEdit" name="txtSearch">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
          <string/>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <property name="placeholderText">
          <string>Enter your search here</string>
@@ -250,8 +259,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1920</width>
-     <height>25</height>
+     <width>800</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatabase">
@@ -402,6 +411,12 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>loginTable</tabstop>
+  <tabstop>txtSearch</tabstop>
+  <tabstop>cbAutoSearch</tabstop>
+  <tabstop>pbSearch</tabstop>
+ </tabstops>
  <resources>
   <include location="resources.qrc"/>
  </resources>

@@ -1,19 +1,20 @@
-import sys, os, sqlite3
-
+import os
+import sqlite3
+import sys
 from shutil import copyfile
 
 from PyQt4 import QtCore, QtGui, uic
-#from PyQt4 import *
-from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-from findDataFile import findDataFile
+from PyQt4.QtGui import *
 
+import resources_rc  # import icons
+from findDataFile import findDataFile
 from passwordGenerator import passwordGenerator
-import resources_rc #import icons
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
+modifiedItems = []
 
 class editEntryDialog(QtGui.QDialog):
     def __init__(self, currentWindow):
@@ -29,16 +30,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
 
+        self.setWindowState(QtCore.Qt.WindowMaximized) #maximize the window
+
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(lambda: self.saveFile("default"))
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
-        self.actionAdd_entry.triggered.connect(self.addEntry)
-        self.actionRemove_entry.triggered.connect(self.removeEntry)
         self.actionNewDB.triggered.connect(self.newDB)
 
+        self.actionAdd_entry.triggered.connect(self.addEntry)
+        self.actionRemove_entry.triggered.connect(self.removeEntry)
         self.actionEdit_entry.triggered.connect(self.editEntry)
         self.loginTable.doubleClicked.connect(self.editEntry)
         self.editPopup = editEntryDialog(self)
+
+        self.actionUndo.triggered.connect(self.undo)
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
@@ -55,16 +60,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
 
     def removeEntry(self):
+        global modifiedItems
         dbConn, dbCursor = self.dbConnect()
 
         i = 0
         indexList = self.loginTable.selectionModel().selectedRows()
-        for row in sorted(indexList):
+        for row in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
             index = indexList[i].row()
             index = int(self.loginTable.item(index, 0).text())
-            dbCursor.execute("DELETE FROM logins WHERE login_id = ?", (index, )) #make sure it is tuple rather than int
+            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (index, ))
+            modifiedItems.append(index)
             i += 1
-            # self.loginTable.removeRow(row.row())
 
         dbConn.commit()
         dbConn.close()
@@ -77,7 +83,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         except IndexError as detail:
             self.warningBox("Please select an item before trying to edit it", detail)
             return None
-
         try:
             self.editPopup.txtSite.setText(self.loginTable.item(index, 1).text())
             self.editPopup.txtUsername.setText(self.loginTable.item(index, 2).text())
@@ -100,19 +105,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def acceptEdit(self):
         dbConn, dbCursor = self.dbConnect()
 
-        # dbCursor.execute("DROP TABLE IF EXISTS logins")
-        # dbConn.commit()
+        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
         
         indexList = self.loginTable.selectionModel().selectedRows()
-        if indexList == []: #if there are not not rows selcted
-            loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+        if indexList == []: #if there are not not rows selcted, add an entry
+             #None so that it auto allocates an ID, 0 so that it is not marked as hidden
             dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
             
-        else: #if the user has selected rows
+        else: #if the user has selected a row
             indexTable = indexList[0].row()
             indexDB = int(self.loginTable.item(indexTable, 0).text())
-            loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), indexDB)
-            dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
+            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
+            modifiedItems.append(indexDB) #add this entry to the undo list
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
+            #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
         
         dbConn.commit()
         dbConn.close()
@@ -192,7 +198,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbName = dirName + "/." + baseName
 
         dbConn, dbCursor = self.dbConnect()
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, modified BOOLEAN)")
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConn.commit()
         dbConn.close()
     
@@ -215,17 +221,24 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         warning.exec_()
 
-    # def undoRedo(self):
-    #     dbConn, dbCursor = self.dbConnect()
-    #     return table
+    def undo(self):
+        dbConn, dbCursor = self.dbConnect()
 
+        index = modifiedItems[len(modifiedItems) - 1] #return last item in list
+        dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (index, ))
+        modifiedItems.pop()
+
+        dbConn.commit()
+        dbConn.close()
+        self.updateTable(searchQ = None)
+        
     def returnItems(self, searchQ):
         dbConn, dbCursor = self.dbConnect()
 
         if searchQ == None:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins")
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         else:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ?", (searchQ, ) )
+            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
         data = dbCursor.fetchall()
         dbConn.close()
 
