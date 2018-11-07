@@ -8,4 +8,4 @@ Here is a small list of improvements or features that I need to add to my progra
 * ?DONE? - Check to see if file has been opened or not, otherwise, don't allow user to edit entries.
 * Add icons to program, using '```pyrcc4 -py3 -o ../resources_rc.py resources.qrc```' -- kinda works, but not all icons show, especially on linux.
 * Censor passwords in the table, show on hold click or context menu (right click)
-* Implement undo/redo using multiple tables, with each change to database, create a new table -- a subroutine can be used for this to avoid code duplication.
+* Implement undo/redo with a new column, and a stack which holds entries that have been changed.
