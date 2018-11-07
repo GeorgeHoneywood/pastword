@@ -6,6 +6,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from findDataFile import findDataFile
 
+import resources_rc #import icons
+
 class passwordGenerator(QtGui.QDialog):
     def __init__(self, currentWindow):
         QtGui.QDialog.__init__(self)
