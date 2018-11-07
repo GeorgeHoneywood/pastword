@@ -242,7 +242,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         aboutBox.setIcon(QtGui.QMessageBox.Information)
         aboutBox.setWindowTitle("About Pastword")
 
-        aboutBox.setText("Pastword is a basic password manager, which has been written for my A-Level Computer Science courswork. This program is written in Python3, uses PyQt4 for the interface, and SQLite for storage of the database.")
+        aboutBox.setText("Pastword is a basic password manager, which I have written for my A-Level Computer Science coursework. This program has written in Python3, using PyQt4 for the interface, and SQLite for storage of the database.")
         aboutBox.setInformativeText("This program was written in 2018 by George Honeywood.")
 
         aboutBox.exec_()
