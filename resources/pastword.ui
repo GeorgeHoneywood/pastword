@@ -89,7 +89,7 @@
       <item>
        <widget class="QCheckBox" name="cbAutoSearch">
         <property name="text">
-         <string>Auto Search</string>
+         <string>Auto search</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -296,6 +296,8 @@
      <string>Tools</string>
     </property>
     <addaction name="actionPassword_Generator"/>
+    <addaction name="separator"/>
+    <addaction name="actionHide_passwords"/>
    </widget>
    <addaction name="menuDatabase"/>
    <addaction name="menuEdit"/>
@@ -408,6 +410,17 @@
    </property>
    <property name="text">
     <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionHide_passwords">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide passwords</string>
    </property>
   </action>
  </widget>

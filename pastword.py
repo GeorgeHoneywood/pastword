@@ -53,6 +53,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
 
+        self.actionHide_passwords.changed.connect(lambda: self.updateTable(searchQ = None))
+
         self.pbSearch.clicked.connect(self.searchDB)
         self.txtSearch.returnPressed.connect(self.searchDB)
         self.txtSearch.textChanged.connect(self.searchDB)
@@ -121,8 +123,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for rowNumber, rowData in enumerate(dbData):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
-                self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str(cellData)))
-
+                if self.actionHide_passwords.isChecked() and colNumber == 4:
+                    self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str("*" * len(cellData))))
+                else:
+                    self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str(cellData)))
+                    
         header = self.loginTable.horizontalHeader()
         header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 
