@@ -197,8 +197,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             modifiedItems.append(indexDB) #add this entry to the undo list
 
             dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
+            #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData) #how I was doing it before
             modifiedItems.append(dbCursor.lastrowid)
-            #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
+        
+        #modifiedItems.append(dbCursor.lastrowid)
         
         dbConn.commit()
         dbConn.close()
