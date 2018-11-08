@@ -8,5 +8,5 @@ Here is a small list of improvements or features that I need to add to my progra
 * ?DONE? - Check to see if file has been opened or not, otherwise, don't allow user to edit entries.
 * DONE - Add icons to program, using '```pyrcc4 -py3 -o ../resources_rc.py resources.qrc```' -- kinda works, but not all icons show, especially on linux.
 * Half done - Censor passwords in the table, show on hold click or context menu (right click). Passwords are now censored, but have to be revealed to be seen in the edit tab. Need to find a way to read real value from db, instead of from table.
-* Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed.
+* Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed. Still need to do undo for new entries.
 * Actually encrypt the file on disk.

@@ -260,7 +260,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatabase">
@@ -297,6 +297,7 @@
     </property>
     <addaction name="actionPassword_Generator"/>
     <addaction name="separator"/>
+    <addaction name="actionClear_deleted_entries"/>
     <addaction name="actionHide_passwords"/>
    </widget>
    <addaction name="menuDatabase"/>
@@ -421,6 +422,11 @@
    </property>
    <property name="text">
     <string>Hide passwords</string>
+   </property>
+  </action>
+  <action name="actionClear_deleted_entries">
+   <property name="text">
+    <string>Clear deleted entries</string>
    </property>
   </action>
  </widget>

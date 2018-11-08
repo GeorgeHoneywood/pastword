@@ -53,6 +53,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
         self.pwGenPopup = passwordGenerator(self)
 
+        self.actionClear_deleted_entries.triggered.connect(self.removeOldEntries)
+
         self.actionHide_passwords.changed.connect(lambda: self.updateTable(searchQ = None))
 
         self.pbSearch.clicked.connect(self.searchDB)
@@ -193,7 +195,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             indexDB = int(self.loginTable.item(indexTable, 0).text())
             dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
             modifiedItems.append(indexDB) #add this entry to the undo list
-            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
+
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
+            modifiedItems.append(dbCursor.lastrowid)
             #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData)
         
         dbConn.commit()
@@ -234,13 +238,37 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             warningBox("No more actions to undo", None)
             return None
 
-        index = modifiedItems[len(modifiedItems) - 1] #return last item in list
-        dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (index, ))
-        modifiedItems.pop()
+        lastItem = self.lastItemToUndo()
+
+        dbCursor.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem, ))
+        dbData = dbCursor.fetchone()
+        if dbData[0] == 0: #if the item is already hidden, we know it has been edited, rather than deleted
+            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem, )) #hide the edited item
+
+            lastItem = self.lastItemToUndo()
+            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem, ))
+
+        else:
+            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem, ))
 
         dbConn.commit()
         dbConn.close()
         self.updateTable(searchQ = None)
+
+    def lastItemToUndo(self):
+        lastItem = modifiedItems[len(modifiedItems) - 1]
+        modifiedItems.pop()
+        return lastItem
+
+    def removeOldEntries(self):
+        dbConn, dbCursor = dbConnect(dbName)
+
+        dbCursor.execute("DELETE FROM logins WHERE hidden = 1") #delete all of the old entries from the table
+        
+        dbConn.commit()
+        dbConn.close()
+
+        modifiedItems.clear() #delete all items from list of things to undo
 
     def about(self):
         aboutBox = QtGui.QMessageBox()
