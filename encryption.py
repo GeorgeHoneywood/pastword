@@ -9,14 +9,31 @@ def enc(decData):
     cipher = createCipher()
     encData = []
 
-    for item, data in enumerate(decData):
-        print(str(item) + ", " + data)
+    for _, data in enumerate(decData): #not using item number
+        #print(str(item) + ", " + str(data))
         
-        data = data.encode()    #convert to bytes   
+        data = str(data).encode()    #convert to bytes   
         encData.append(cipher.encrypt(data))    #encrypt
+
+    encData.insert(0, None)
+    print(encData)
         
     return tuple(encData) #convert to tuple and return it
 
 def dec(encData):
-    return decData
+    cipher = createCipher()
+    decData = []
+
+    for item, data in enumerate(decData):
+        print(str(item) + ", " + str(data))
+        data = str(data).decode()
+        print(data)
+        if item != 0:
+            decData.append(cipher.decrypt(data))
+        else:
+            decData.append(data)
+          
+    print(decData)
+        
+    return tuple(decData) #convert to tuple and return it
 

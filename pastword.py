@@ -39,6 +39,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(lambda: self.saveFile("default"))
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
         self.actionNewDB.triggered.connect(self.newDB)
+        self.actionRefresh_table.triggered.connect(self.updateTable)
 
         self.actionAdd_entry.triggered.connect(self.addEntry)
         self.actionRemove_entry.triggered.connect(self.removeEntry)
@@ -113,17 +114,21 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return dbData
 
     def updateTable(self, searchQ):
-        dbData = self.returnItems(searchQ)
+        encData = self.returnItems(searchQ)
+        print("enc")
+        print(encData)
+        decData = dec(encData)
+        print(decData)
 
         #first delete all rows from table
         self.loginTable.setRowCount(0)
 
-        if dbData == []:
+        if decData == []:
             self.loginTable.insertRow(self.loginTable.rowCount())
             self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
         #load in all items from db, only creating if necessary 
-        for rowNumber, rowData in enumerate(dbData):
+        for rowNumber, rowData in enumerate(decData):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
                 if self.actionHide_passwords.isChecked() and colNumber == 4:
@@ -187,7 +192,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
 
         encLoginData = enc(loginData)
-        encLoginData = encLoginData.insert(0, None)
         
         indexList = self.loginTable.selectionModel().selectedRows()
         if indexList == []: #if there are not not rows selcted, add an entry

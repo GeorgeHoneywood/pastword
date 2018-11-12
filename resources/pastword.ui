@@ -260,7 +260,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatabase">
@@ -272,6 +272,8 @@
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
+    <addaction name="separator"/>
+    <addaction name="actionRefresh_table"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -427,6 +429,11 @@
   <action name="actionClear_deleted_entries">
    <property name="text">
     <string>Clear deleted entries</string>
+   </property>
+  </action>
+  <action name="actionRefresh_table">
+   <property name="text">
+    <string>Refresh table</string>
    </property>
   </action>
  </widget>
