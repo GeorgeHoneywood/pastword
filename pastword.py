@@ -12,6 +12,7 @@ from findDataFile import findDataFile
 from passwordGenerator import passwordGenerator
 from warningBox import warningBox
 from dbConnect import dbConnect
+from encryption import enc, dec
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -183,12 +184,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def acceptEdit(self):
         dbConn, dbCursor = dbConnect(dbName)
 
-        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+        loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+
+        encLoginData = enc(loginData)
+        encLoginData = encLoginData.insert(0, None)
         
         indexList = self.loginTable.selectionModel().selectedRows()
         if indexList == []: #if there are not not rows selcted, add an entry
              #None so that it auto allocates an ID, 0 so that it is not marked as hidden
-            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", encLoginData)
             
         else: #if the user has selected a row
             indexTable = indexList[0].row()
@@ -196,7 +200,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
             modifiedItems.append(indexDB) #add this entry to the undo list
 
-            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
+            dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", encLoginData) #add a new entry
             #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData) #how I was doing it before
             modifiedItems.append(dbCursor.lastrowid)
         
