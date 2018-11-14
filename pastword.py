@@ -118,9 +118,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def updateTable(self, searchQ):
         encData = self.returnItems(searchQ)
-        print(encData)
+        #print(encData)
         decData = dec(encData)
-        print(decData)
+        #print(decData)
 
         #first delete all rows from table
         self.loginTable.setRowCount(0)
