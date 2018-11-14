@@ -10,5 +10,6 @@ Here is a small list of improvements or features that I need to add to my progra
 * Half done - Censor passwords in the table, show on hold click or context menu (right click). Passwords are now censored, but have to be revealed to be seen in the edit tab. Need to find a way to read real value from db, instead of from table.
 * Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed. Still need to do undo for new entries.
 * DONE - Actually encrypt the file on disk. Kinda done, doesn't really work and has broken the program (mostly search)
-* Build up list for row, then create list of rows
+* DONE - Build up list for row, then create list of rows
 * Still thinking about it, should database be stored in memory, changes made to disk file, then loaded back into memory, or should just load whole thing into memory, make changes to it, then save to disk encrypted.
+* Query the user for the password, using the form.
