@@ -11,5 +11,5 @@ Here is a small list of improvements or features that I need to add to my progra
 * Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed. Still need to do undo for new entries.
 * DONE - Actually encrypt the file on disk. Kinda done, doesn't really work and has broken the program (mostly search)
 * DONE - Build up list for row, then create list of rows
-* Still thinking about it, should database be stored in memory, changes made to disk file, then loaded back into memory, or should just load whole thing into memory, make changes to it, then save to disk encrypted.
+* Still thinking about it, should database be stored in memory, changes made to disk file, then loaded back into memory, or should just load whole thing into memory, make changes to it, then save to disk encrypted. Would make program faster as would only have to encrypt and decypt when loading or saving.
 * Query the user for the password, using the form.
