@@ -13,31 +13,29 @@ def enc(decData):
         #print(str(item) + ", " + str(data))
         if item != 5:
             data = str(data).encode()    #convert to bytes
-            print(data)
             encData.append(cipher.encrypt(data))    #encrypt
         else:
-            print("6")
             encData.append(data)
 
     encData.insert(0, None)
-    tupEncData = tuple(encData)
         
-    return tupEncData #convert to tuple and return it
+    return tuple(encData) #convert to tuple and return it
 
 def dec(encData):
     cipher = createCipher()
     decData = []
+    rowList = []
 
-    for row, rowData in enumerate(encData):
+    for _, rowData in enumerate(encData):
         for item, data in enumerate(rowData):
-            print(str(item) + ", " + str(data))
+            #print(str(item) + ", " + str(data))
             if item != 0:
                 decBytes = cipher.decrypt(data)
-                decData.append(row[decBytes.decode()])
+                rowList.append(decBytes.decode())
             else:
-                decData.append(data)
-            
-    print(decData)
-        
-    return tuple(decData) #convert to tuple and return it
+                rowList.append(data)
 
+        decData.append(rowList)
+        rowList = []
+        
+    return decData
