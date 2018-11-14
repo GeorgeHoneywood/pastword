@@ -104,10 +104,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def returnItems(self, searchQ):
         dbConn, dbCursor = dbConnect(dbName)
 
-        if searchQ == None:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
-        else:
-            dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
+        # if searchQ == None:
+        #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+        # else:
+        #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
+
+        dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+
         dbData = dbCursor.fetchall()
         dbConn.close()
 
@@ -115,7 +118,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def updateTable(self, searchQ):
         encData = self.returnItems(searchQ)
-        print("enc")
         print(encData)
         decData = dec(encData)
         print(decData)
