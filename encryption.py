@@ -12,7 +12,7 @@ def createCipher():
     #password = input("Enter your password:\n")
     password = "dab password"
     key = deriveKey(password)
-    print(key)
+    #print(key)
 
     cipher = Fernet(key)
     return cipher

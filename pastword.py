@@ -78,6 +78,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConn, dbCursor = dbConnect(dbName)
         dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConn.commit()
+
+        dbCursor.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
+        dbConn.commit()
         dbConn.close()
         
     def openFile(self):
@@ -151,11 +154,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         i = 0
         indexList = self.loginTable.selectionModel().selectedRows()
-        for row in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
+        for _ in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
             index = indexList[i].row()
             index = int(self.loginTable.item(index, 0).text())
             dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (index, ))
-            modifiedItems.append(index)
+            dbConn.commit()
+            self.addToUndoTable(index)
             i += 1
 
         dbConn.commit()
@@ -204,11 +208,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             indexTable = indexList[0].row()
             indexDB = int(self.loginTable.item(indexTable, 0).text())
             dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
-            modifiedItems.append(indexDB) #add this entry to the undo list
+            dbConn.commit()
+            self.addToUndoTable(indexDB) #add this entry to the undo list
 
             dbCursor.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", encLoginData) #add a new entry
+            dbConn.commit()
             #dbCursor.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData) #how I was doing it before
-            modifiedItems.append(dbCursor.lastrowid)
+            self.addToUndoTable(dbCursor.lastrowid)
         
         #modifiedItems.append(dbCursor.lastrowid)
         
@@ -246,31 +252,44 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def undo(self):
         dbConn, dbCursor = dbConnect(dbName)
 
-        if len(modifiedItems) == 0:
-            warningBox("No more actions to undo", None)
-            return None
-
         lastItem = self.lastItemToUndo()
 
-        dbCursor.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem, ))
+        dbCursor.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
         dbData = dbCursor.fetchone()
         if dbData[0] == 0: #if the item is already hidden, we know it has been edited, rather than deleted
-            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem, )) #hide the edited item
+            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem)) #hide the edited item
 
             lastItem = self.lastItemToUndo()
-            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem, ))
+            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
 
         else:
-            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem, ))
+            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
 
         dbConn.commit()
         dbConn.close()
         self.updateTable(searchQ = None)
 
     def lastItemToUndo(self):
-        lastItem = modifiedItems[len(modifiedItems) - 1]
-        modifiedItems.pop()
+        dbConn, dbCursor = dbConnect(dbName)
+        dbCursor.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
+        lastItem = dbCursor.fetchone()
+
+        if lastItem == None:
+            warningBox("No more actions to undo", None)
+            return None
+
+        dbCursor.execute("DELETE FROM undo WHERE undo_id = ?", lastItem)
+        dbConn.commit()
+
+        dbConn.close()
         return lastItem
+
+    def addToUndoTable(self, item):
+        dbConn, dbCursor = dbConnect(dbName)
+        item = (None, item)
+        dbCursor.execute("INSERT INTO undo VALUES (?, ?)", item)
+        dbConn.commit()
+        dbConn.close()
 
     def removeOldEntries(self):
         dbConn, dbCursor = dbConnect(dbName)
