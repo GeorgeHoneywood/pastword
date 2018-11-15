@@ -17,9 +17,6 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
 
-dbConnMem = sqlite3.connect(":memory:")
-dbCursorMem = dbConnMem.cursor()
-
 class editEntryDialog(QtGui.QDialog):
     def __init__(self, currentWindow):
         QtGui.QDialog.__init__(self)
@@ -76,15 +73,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         dbName = dirName + "/." + baseName
 
-        dbConnFile.connect(dbName)
-        dbCursorFile.cursor()
+        dbConnFile = sqlite3.connect(dbName)
+        dbCursorFile = dbConnFile.cursor()
         
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
-        dbConn.commit()
+        dbCursorFile.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
+        dbConnFile.commit()
 
-        dbCursor.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
-        dbConn.commit()
-        dbConn.close()
+        dbCursorFile.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
+        dbConnFile.commit()
+        dbConnFile.close()
         
     def openFile(self):
         global dbName
@@ -103,9 +100,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ = None)
         
     def saveFile(self, saveType): #savetype ignored for now
-        dirName = os.path.dirname(dbName)
-        baseName = os.path.basename(dbName)
-        copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
+        # dirName = os.path.dirname(dbName)
+        # baseName = os.path.basename(dbName)
+        # copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
 
     def returnItems(self, searchQ):
         # if searchQ == None:
@@ -113,10 +110,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # else:
         #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
 
-        dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+        dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
 
-        dbData = dbCursor.fetchall()
-        dbConn.close()
+        dbData = dbCursorMem.fetchall()
+        dbConnMem.close()
 
         return dbData
 
@@ -191,8 +188,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtNotes.setText("")
     
     def acceptEdit(self):
-        
-
         loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
 
         encLoginData = enc(loginData)
