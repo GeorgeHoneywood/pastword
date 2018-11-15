@@ -11,13 +11,14 @@ import resources_rc  # import icons
 from findDataFile import findDataFile
 from passwordGenerator import passwordGenerator
 from warningBox import warningBox
-from dbConnect import dbConnect
 from encryption import enc, dec
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
-modifiedItems = []
+
+dbConnMem = sqlite3.connect(":memory:")
+dbCursorMem = dbConnMem.cursor()
 
 class editEntryDialog(QtGui.QDialog):
     def __init__(self, currentWindow):
@@ -75,7 +76,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         dbName = dirName + "/." + baseName
 
-        dbConn, dbCursor = dbConnect(dbName)
+        dbConnFile.connect(dbName)
+        dbCursorFile.cursor()
+        
         dbCursor.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConn.commit()
 
@@ -105,8 +108,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
 
     def returnItems(self, searchQ):
-        dbConn, dbCursor = dbConnect(dbName)
-
         # if searchQ == None:
         #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         # else:
@@ -149,9 +150,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
 
     def removeEntry(self):
-        global modifiedItems
-        dbConn, dbCursor = dbConnect(dbName)
-
         i = 0
         indexList = self.loginTable.selectionModel().selectedRows()
         for _ in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
@@ -193,7 +191,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtNotes.setText("")
     
     def acceptEdit(self):
-        dbConn, dbCursor = dbConnect(dbName)
+        
 
         loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
 
@@ -250,8 +248,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         contextMenu.exec_(event.screenPos())
 
     def undo(self):
-        dbConn, dbCursor = dbConnect(dbName)
-
         lastItem = self.lastItemToUndo()
 
         dbCursor.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
@@ -270,7 +266,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ = None)
 
     def lastItemToUndo(self):
-        dbConn, dbCursor = dbConnect(dbName)
+        
         dbCursor.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
         lastItem = dbCursor.fetchone()
 
@@ -285,21 +281,18 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return lastItem
 
     def addToUndoTable(self, item):
-        dbConn, dbCursor = dbConnect(dbName)
         item = (None, item)
         dbCursor.execute("INSERT INTO undo VALUES (?, ?)", item)
         dbConn.commit()
         dbConn.close()
 
     def removeOldEntries(self):
-        dbConn, dbCursor = dbConnect(dbName)
-
         dbCursor.execute("DELETE FROM logins WHERE hidden = 1") #delete all of the old entries from the table
         
         dbConn.commit()
         dbConn.close()
 
-        modifiedItems.clear() #delete all items from list of things to undo
+        #modifiedItems.clear() #delete all items from list of things to undo
 
     def about(self):
         aboutBox = QtGui.QMessageBox()
