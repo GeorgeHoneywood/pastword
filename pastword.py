@@ -96,24 +96,39 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConnMem.commit()
         
     def openFile(self):
-        pass
-        # global dbName
-        # dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
+        global dbName
+        dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
 
-        # if dbName == '':
-        #     warningBox("Please select a file", None)
-        #     return None
+        if dbName == '':
+            warningBox("Please select a file", None)
+            return None
+
+        dbFile = open(dbName, "r")
+        dbDump = dbFile.read()
+
+        # os.remove(".enc.db")
+        # dbConnEnc = sqlite3.connect(".enc.db")
+        # dbCursorEnc = dbConnEnc.cursor()
+
+        dbCursorMem.executescript(dbDump) #insert data from db dump to intermediary database
+        dbCursorMem.execute("SELECT * FROM logins")
+        loginData = dbCursorMem.fetchall()
+        dbCursorMem.execute("DELETE FROM logins")
+
+        loginData = dec(loginData)
+
+        for row in loginData:
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", tuple(row))
+        
+        dbConnMem.commit()
+
+        self.updateTable(searchQ = None)
 
         # dirName = os.path.dirname(dbName)
         # baseName = os.path.basename(dbName)
         # copyfile(dbName, dirName + "/." + baseName)
 
         # dbName = dirName + "/." + baseName
-
-        # self.updateTable(searchQ = None)
-    
-    def loadDbToMem(self):
-        pass
         
     def saveFile(self, saveType): #savetype ignored for now
         # dirName = os.path.dirname(dbName)
@@ -121,35 +136,27 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
         with open(dbName, 'w') as dbFile:
             for line in dbConnMem.iterdump():
-                dbFile.write('%s\n' % line)
+                dbFile.write('{}\n'.format(line))
 
     def returnItems(self, searchQ):
-        # if searchQ == None:
-        #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
-        # else:
-        #     dbCursor.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
-        dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
-
-        dbData = dbCursorMem.fetchall()
-        dbConnMem.close()
-
-        return dbData
+        if searchQ == None:
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+        else:
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
+        return dbCursorMem.fetchall()
 
     def updateTable(self, searchQ):
-        encData = self.returnItems(searchQ)
-        #print(encData)
-        decData = dec(encData)
-        #print(decData)
+        dbData = self.returnItems(searchQ)
 
         #first delete all rows from table
         self.loginTable.setRowCount(0)
 
-        if decData == []:
+        if dbData == []:
             self.loginTable.insertRow(self.loginTable.rowCount())
             self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
         #load in all items from db, only creating if necessary 
-        for rowNumber, rowData in enumerate(decData):
+        for rowNumber, rowData in enumerate(dbData):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
                 if self.actionHide_passwords.isChecked() and colNumber == 4:
@@ -170,13 +177,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for _ in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
             index = indexList[i].row()
             index = int(self.loginTable.item(index, 0).text())
-            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (index, ))
-            dbConn.commit()
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (index, ))
+            dbConnMem.commit()
             self.addToUndoTable(index)
             i += 1
 
-        dbConn.commit()
-        dbConn.close()
+        dbConnMem.commit()
         self.updateTable(searchQ = None)
 
     def editEntry(self):
@@ -206,24 +212,22 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.editPopup.txtNotes.setText("")
     
     def acceptEdit(self):
-        loginData = (self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
-
-        encLoginData = enc(loginData)
+        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
         
         indexList = self.loginTable.selectionModel().selectedRows()
         if indexList == []: #if there are not not rows selcted, add an entry
              #None so that it auto allocates an ID, 0 so that it is not marked as hidden
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", encLoginData)
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
             
         else: #if the user has selected a row
             indexTable = indexList[0].row()
             indexDB = int(self.loginTable.item(indexTable, 0).text())
             dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
-            dbCursorMem.commit()
+            dbConnMem.commit()
             self.addToUndoTable(indexDB) #add this entry to the undo list
 
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", encLoginData) #add a new entry
-            dbCursorMem.commit()
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
+            dbConnMem.commit()
             #dbCursorMem.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData) #how I was doing it before
             self.addToUndoTable(dbCursorMem.lastrowid)
         
@@ -262,47 +266,44 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def undo(self):
         lastItem = self.lastItemToUndo()
 
-        dbCursor.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
-        dbData = dbCursor.fetchone()
+        dbCursorMem.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
+        dbData = dbCursorMem.fetchone()
         if dbData[0] == 0: #if the item is already hidden, we know it has been edited, rather than deleted
-            dbCursor.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem)) #hide the edited item
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem)) #hide the edited item
 
             lastItem = self.lastItemToUndo()
-            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
+            dbCursorMem.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
 
         else:
-            dbCursor.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
+            dbCursorMem.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
 
-        dbConn.commit()
-        dbConn.close()
+        dbConnMem.commit()
         self.updateTable(searchQ = None)
 
     def lastItemToUndo(self):
         
-        dbCursor.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
-        lastItem = dbCursor.fetchone()
+        dbCursorMem.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
+        lastItem = dbCursorMem.fetchone()
 
         if lastItem == None:
             warningBox("No more actions to undo", None)
             return None
 
-        dbCursor.execute("DELETE FROM undo WHERE undo_id = ?", lastItem)
-        dbConn.commit()
+        dbCursorMem.execute("DELETE FROM undo WHERE undo_id = ?", lastItem)
+        dbConnMem.commit()
 
-        dbConn.close()
         return lastItem
 
     def addToUndoTable(self, item):
         item = (None, item)
-        dbCursor.execute("INSERT INTO undo VALUES (?, ?)", item)
-        dbConn.commit()
-        dbConn.close()
+        dbCursorMem.execute("INSERT INTO undo VALUES (?, ?)", item)
+        dbConnMem.commit()
 
     def removeOldEntries(self):
-        dbCursor.execute("DELETE FROM logins WHERE hidden = 1") #delete all of the old entries from the table
+        dbCursorMem.execute("DELETE FROM logins WHERE hidden = 1") #delete all of the old entries from the table
+        dbCursorMem.execute("DELETE FROM undo")
         
-        dbConn.commit()
-        dbConn.close()
+        dbConnMem.commit()
 
         #modifiedItems.clear() #delete all items from list of things to undo
 

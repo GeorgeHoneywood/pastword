@@ -57,15 +57,15 @@ def dec(encData):
     for _, rowData in enumerate(encData):
         for item, data in enumerate(rowData):
             #print(str(item) + ", " + str(data))
-            if item != 0:
+            if item == 0 or item == 6: #ignore integer values
+                rowList.append(data)
+            else:
                 try:
                     decBytes = cipher.decrypt(data)
                 except:
                     warningBox("Please check your password", None)
                     raise Exception("PasswordError")
                 rowList.append(decBytes.decode())
-            else:
-                rowList.append(data)
 
         decData.append(rowList)
         rowList = []
