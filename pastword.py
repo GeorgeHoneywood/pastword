@@ -104,25 +104,30 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             return None
 
         dbFile = open(dbName, "r")
-        dbDump = dbFile.read()
+        dbLine = dbFile.readline()
+
+        while dbLine != "":
+            dbLine = dec(dbLine)
+
+            dbLine = dbFile.readline()
 
         # os.remove(".enc.db")
         # dbConnEnc = sqlite3.connect(".enc.db")
         # dbCursorEnc = dbConnEnc.cursor()
 
-        dbCursorMem.executescript(dbDump) #insert data from db dump to intermediary database
-        dbCursorMem.execute("SELECT * FROM logins")
-        loginData = dbCursorMem.fetchall()
-        dbCursorMem.execute("DELETE FROM logins")
+        # dbCursorMem.executescript(dbDump) #insert data from db dump to intermediary database
+        # dbCursorMem.execute("SELECT * FROM logins")
+        # loginData = dbCursorMem.fetchall()
+        # dbCursorMem.execute("DELETE FROM logins")
 
-        loginData = dec(loginData)
+        # loginData = dec(loginData)
 
-        for row in loginData:
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", tuple(row))
+        # for row in loginData:
+        #     dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", tuple(row))
         
-        dbConnMem.commit()
+        # dbConnMem.commit()
 
-        self.updateTable(searchQ = None)
+        # self.updateTable(searchQ = None)
 
         # dirName = os.path.dirname(dbName)
         # baseName = os.path.basename(dbName)
@@ -131,12 +136,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # dbName = dirName + "/." + baseName
         
     def saveFile(self, saveType): #savetype ignored for now
+        global dbName
         # dirName = os.path.dirname(dbName)
         # baseName = os.path.basename(dbName)
         # copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
+        if dbName == "":
+            dbName = "defaultSave.name"
+
         with open(dbName, 'w') as dbFile:
             for line in dbConnMem.iterdump():
-                dbFile.write('{}\n'.format(line))
+                encLine = enc(line)
+                dbFile.write('{}\n'.format(encLine))
 
     def returnItems(self, searchQ):
         if searchQ == None:
@@ -329,5 +339,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    if dbName != "":
-        os.remove(dbName) #remove temporary .file after exit of program
+    #if dbName != "":
+        #os.remove(dbName) #remove temporary .file after exit of program

@@ -33,41 +33,52 @@ def deriveKey(password):
 
     return key
 
-def enc(decData):
+def enc(decLine):
     cipher = createCipher()
-    encData = []
+    # encData = []
 
-    for item, data in enumerate(decData): #not using item number
-        #print(str(item) + ", " + str(data))
-        if item != 5:
-            data = str(data).encode()    #convert to bytes
-            encData.append(cipher.encrypt(data))    #encrypt
-        else:
-            encData.append(data)
+    # for item, data in enumerate(decData): #not using item number
+    #     #print(str(item) + ", " + str(data))
+    #     if item != 5:
+    #         data = str(data).encode()    #convert to bytes
+    #         encData.append(cipher.encrypt(data))    #encrypt
+    #     else:
+    #         encData.append(data)
 
-    encData.insert(0, None)
-        
-    return tuple(encData) #convert to tuple and return it
+    # encData.insert(0, None)
 
-def dec(encData):
+    # return tuple(encData) #convert to tuple and return it
+
+    decLine = str(decLine).encode()
+    return cipher.encrypt(decLine)
+
+def dec(encLine):
     cipher = createCipher()
-    decData = []
-    rowList = []
+    # decData = []
+    # rowList = []
 
-    for _, rowData in enumerate(encData):
-        for item, data in enumerate(rowData):
-            #print(str(item) + ", " + str(data))
-            if item == 0 or item == 6: #ignore integer values
-                rowList.append(data)
-            else:
-                try:
-                    decBytes = cipher.decrypt(data)
-                except:
-                    warningBox("Please check your password", None)
-                    raise Exception("PasswordError")
-                rowList.append(decBytes.decode())
+    # for _, rowData in enumerate(encData):
+    #     for item, data in enumerate(rowData):
+    #         #print(str(item) + ", " + str(data))
+    #         if item == 0 or item == 6: #ignore integer values
+    #             rowList.append(data)
+    #         else:
+    #             try:
+    #                 decBytes = cipher.decrypt(data)
+    #             except:
+    #                 warningBox("Please check your password", None)
+    #                 raise Exception("PasswordError")
+    #             rowList.append(decBytes.decode())
 
-        decData.append(rowList)
-        rowList = []
-        
-    return decData
+    #     decData.append(rowList)
+    #     rowList = []
+    print(encLine)
+
+    try:
+        decLine = cipher.decrypt(encLine)
+        print(decLine)
+    except:
+        warningBox("Please check your password", None)
+        raise Exception("PasswordError")
+
+    return str(decLine).decode()
