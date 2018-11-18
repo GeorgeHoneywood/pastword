@@ -26,7 +26,7 @@ class editEntryDialog(QtGui.QDialog):
         uic.loadUi(findDataFile("editEntry.ui"), self)
 
         self.pbCancel.clicked.connect(self.close)
-        self.pbAccept.clicked.connect(currentWindow.acceptEdit)
+        self.pbAccept.clicked.connect(currentWindow.acceptEntry)
 
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -40,7 +40,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(lambda: self.saveFile("default"))
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
         self.actionNewDB.triggered.connect(self.newDB)
-        self.actionRefresh_table.triggered.connect(self.updateTable)
+        self.actionRefresh_table.triggered.connect(lambda: self.updateTable(searchQ = None))
 
         self.actionAdd_entry.triggered.connect(self.addEntry)
         self.actionRemove_entry.triggered.connect(self.removeEntry)
@@ -68,28 +68,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
     def newDB(self):
-        # global dbName
-        # dbName = QtGui.QFileDialog.getSaveFileName(self, 'New database')
-
-        # if dbName == '':
-        #     warningBox("Please select a file", None)
-        #     return None
-
-        # dirName = os.path.dirname(dbName)
-        # baseName = os.path.basename(dbName)
-        
-        # dbName = dirName + "/." + baseName
-
-        # dbConnFile = sqlite3.connect(dbName)
-        # dbCursorFile = dbConnFile.cursor()
-        
-        # dbCursorFile.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
-        # dbConnFile.commit()
-
-        # dbCursorFile.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
-        # dbConnFile.commit()
-        # dbConnFile.close()
-
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConnMem.commit()
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
@@ -97,59 +75,35 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
     def openFile(self):
         global dbName
-        dbName = QtGui.QFileDialog.getOpenFileName(self, 'Open database')
+        dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database")
 
-        if dbName == '':
+        if not dbName:
             warningBox("Please select a file", None)
             return None
 
         dbFile = open(dbName, "r")
         dbLine = dbFile.readline()
 
-        while dbLine != "":
-            dbLine = dec(dbLine)
-
+        while dbLine:
+            print("yes")
+            #dbLine = dec(dbLine)
             dbLine = dbFile.readline()
+            # maybe use .join to remake file in decrypted format
 
-        # os.remove(".enc.db")
-        # dbConnEnc = sqlite3.connect(".enc.db")
-        # dbCursorEnc = dbConnEnc.cursor()
-
-        # dbCursorMem.executescript(dbDump) #insert data from db dump to intermediary database
-        # dbCursorMem.execute("SELECT * FROM logins")
-        # loginData = dbCursorMem.fetchall()
-        # dbCursorMem.execute("DELETE FROM logins")
-
-        # loginData = dec(loginData)
-
-        # for row in loginData:
-        #     dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", tuple(row))
-        
-        # dbConnMem.commit()
-
-        # self.updateTable(searchQ = None)
-
-        # dirName = os.path.dirname(dbName)
-        # baseName = os.path.basename(dbName)
-        # copyfile(dbName, dirName + "/." + baseName)
-
-        # dbName = dirName + "/." + baseName
         
     def saveFile(self, saveType): #savetype ignored for now
         global dbName
-        # dirName = os.path.dirname(dbName)
-        # baseName = os.path.basename(dbName)
-        # copyfile(dbName, dirName + "/" + baseName[1:]) #only get chars after 1, to overwrite original
-        if dbName == "":
+
+        if not dbName:
             dbName = "defaultSave.name"
 
-        with open(dbName, 'w') as dbFile:
+        with open(dbName, "w") as dbFile:
             for line in dbConnMem.iterdump():
                 encLine = enc(line)
-                dbFile.write('{}\n'.format(encLine))
+                dbFile.write("{}\n".format(encLine))
 
     def returnItems(self, searchQ):
-        if searchQ == None:
+        if searchQ is None:
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         else:
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
@@ -161,7 +115,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #first delete all rows from table
         self.loginTable.setRowCount(0)
 
-        if dbData == []:
+        if not dbData:
             self.loginTable.insertRow(self.loginTable.rowCount())
             self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
@@ -182,17 +136,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
 
     def removeEntry(self):
-        i = 0
-        indexList = self.loginTable.selectionModel().selectedRows()
-        for _ in sorted(indexList): #hide the entry, don't actually delete - this allows for undo
-            index = indexList[i].row()
-            index = int(self.loginTable.item(index, 0).text())
-            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (index, ))
-            dbConnMem.commit()
-            self.addToUndoTable(index)
-            i += 1
+        indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] #create list containing selected rows in table
+        print(indexList)
 
-        dbConnMem.commit()
+        for row in indexList: #hide the entry, don't actually delete - this allows for undo
+            dbRow = int(self.loginTable.item(row, 0).text()) #get the index of the item in the DB from the ID column
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (dbRow, )) #hide said item
+            dbConnMem.commit()
+            self.addToUndoTable(dbRow)
+
         self.updateTable(searchQ = None)
 
     def editEntry(self):
@@ -215,17 +167,22 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.exec_()
 
     def clearEditPopup(self):
-            self.editPopup.txtSite.setText("")
-            self.editPopup.txtUsername.setText("")
-            self.editPopup.txtEmail.setText("")
-            self.editPopup.txtPassword.setText("")
-            self.editPopup.txtNotes.setText("")
+        # fieldNames = ["txtSite", "txtUsername", "txtEmail", "txtPassword", "txtNotes"] #would be nice if i could do it like so
+
+        # for fieldName in fieldNames:
+        #     self.editPopup.{}.setText("").format{fieldName}
+
+        self.editPopup.txtSite.setText("")
+        self.editPopup.txtUsername.setText("")
+        self.editPopup.txtEmail.setText("")
+        self.editPopup.txtPassword.setText("")
+        self.editPopup.txtNotes.setText("")
     
-    def acceptEdit(self):
+    def acceptEntry(self):
         loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
         
         indexList = self.loginTable.selectionModel().selectedRows()
-        if indexList == []: #if there are not not rows selcted, add an entry
+        if not indexList: #if there are not not rows selcted, add an entry
              #None so that it auto allocates an ID, 0 so that it is not marked as hidden
             dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
             
@@ -238,7 +195,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
             dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
             dbConnMem.commit()
-            #dbCursorMem.execute("UPDATE logins SET site = ?, username = ?, email = ?, password = ?, notes = ? WHERE login_id = ?", loginData) #how I was doing it before
             self.addToUndoTable(dbCursorMem.lastrowid)
         
         #modifiedItems.append(dbCursorMem.lastrowid)
@@ -253,10 +209,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def searchDB(self):
         searchQ = self.txtSearch.text()
-        if searchQ == '': #if nothing in text box, return none for query
+        if not searchQ: #if nothing in text box, return none for query
             searchQ = None
         else:
-            searchQ = "%" + searchQ + "%" 
+            searchQ = "{}{}{}".format("%", searchQ, "%")
         self.updateTable(searchQ)
 
     def autoSearch(self, state):
@@ -295,7 +251,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursorMem.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
         lastItem = dbCursorMem.fetchone()
 
-        if lastItem == None:
+        if not lastItem: # if lastitem is none
             warningBox("No more actions to undo", None)
             return None
 
@@ -314,8 +270,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursorMem.execute("DELETE FROM undo")
         
         dbConnMem.commit()
-
-        #modifiedItems.clear() #delete all items from list of things to undo
 
     def about(self):
         aboutBox = QtGui.QMessageBox()
@@ -339,5 +293,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #if dbName != "":
-        #os.remove(dbName) #remove temporary .file after exit of program
