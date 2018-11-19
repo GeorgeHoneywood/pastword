@@ -11,7 +11,7 @@ import resources_rc  # import icons
 from findDataFile import findDataFile
 from passwordGenerator import passwordGenerator
 from warningBox import warningBox
-from encryption import enc, dec
+from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
@@ -84,12 +84,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbFile = open(dbName, "r")
         dbLine = dbFile.readline()
 
+        cipher = createCipher()
+
         while dbLine:
-            print("yes")
-            #dbLine = dec(dbLine)
+            
+            dbLine = dec(cipher, dbLine)
             dbLine = dbFile.readline()
             # maybe use .join to remake file in decrypted format
-
         
     def saveFile(self, saveType): #savetype ignored for now
         global dbName
@@ -97,16 +98,18 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if not dbName:
             dbName = "defaultSave.name"
 
+        cipher = createCipher()
+
         with open(dbName, "w") as dbFile:
-            for line in dbConnMem.iterdump():
-                encLine = enc(line)
+            for decLine in dbConnMem.iterdump():
+                encLine = enc(cipher, decLine)
                 dbFile.write("{}\n".format(encLine))
 
     def returnItems(self, searchQ):
         if searchQ is None:
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         else:
-            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ) )
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ))
         return dbCursorMem.fetchall()
 
     def updateTable(self, searchQ):

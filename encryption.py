@@ -30,11 +30,11 @@ def deriveKey(password):
     )
 
     key = base64.urlsafe_b64encode(kdf.derive(bytesPass))
+    print(key)
 
     return key
 
-def enc(decLine):
-    cipher = createCipher()
+def enc(cipher, decLine):
     # encData = []
 
     # for item, data in enumerate(decData): #not using item number
@@ -52,8 +52,7 @@ def enc(decLine):
     decLine = str(decLine).encode()
     return cipher.encrypt(decLine)
 
-def dec(encLine):
-    cipher = createCipher()
+def dec(cipher, encLine):
     # decData = []
     # rowList = []
 
@@ -72,13 +71,13 @@ def dec(encLine):
 
     #     decData.append(rowList)
     #     rowList = []
-    print(encLine)
+    # print(encLine)
 
     try:
         decLine = cipher.decrypt(encLine)
-        print(decLine)
-    except:
-        warningBox("Please check your password", None)
-        raise Exception("PasswordError")
+        # print(decLine)
+    # except:
+    #     warningBox("Please check your password", None)
+    #     raise Exception("PasswordError")
 
     return str(decLine).decode()
