@@ -33,41 +33,15 @@ def deriveKey(password):
 
     return key
 
-def enc(decData):
-    cipher = createCipher()
-    encData = []
+def enc(cipher, decLine):
+    decLine = str(decLine).encode()
+    return cipher.encrypt(decLine)
 
-    for item, data in enumerate(decData): #not using item number
-        #print(str(item) + ", " + str(data))
-        if item != 5:
-            data = str(data).encode()    #convert to bytes
-            encData.append(cipher.encrypt(data))    #encrypt
-        else:
-            encData.append(data)
+def dec(cipher, encLine):
+    try:
+        decLine = cipher.decrypt(encLine)
+    except:
+        warningBox("Please check your password", None)
+        raise Exception("PasswordError")
 
-    encData.insert(0, None)
-        
-    return tuple(encData) #convert to tuple and return it
-
-def dec(encData):
-    cipher = createCipher()
-    decData = []
-    rowList = []
-
-    for _, rowData in enumerate(encData):
-        for item, data in enumerate(rowData):
-            #print(str(item) + ", " + str(data))
-            if item != 0:
-                try:
-                    decBytes = cipher.decrypt(data)
-                except:
-                    warningBox("Please check your password", None)
-                    raise Exception("PasswordError")
-                rowList.append(decBytes.decode())
-            else:
-                rowList.append(data)
-
-        decData.append(rowList)
-        rowList = []
-        
-    return decData
+    return decLine.decode()
