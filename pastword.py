@@ -162,11 +162,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def editEntry(self):
         indexes = self.loginTable.selectionModel().selectedRows()
-        try:
-            index = indexes[0].row()
-        except IndexError as detail:
-            warningBox("Please select an item before trying to edit it", detail)
+        if not indexes:
+            warningBox("Please select an item before trying to edit it", None)
             return None
+
+        index = indexes[0].row()
+        
         try:
             self.editPopup.txtSite.setText(self.loginTable.item(index, 1).text())
             self.editPopup.txtUsername.setText(self.loginTable.item(index, 2).text())
@@ -295,7 +296,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    #app.setApplicationName("your title") #doesn't work
+    app.setApplicationName("your title") #doesn't work
     window = mainWindow()
     window.show()
     try:
