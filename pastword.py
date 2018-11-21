@@ -85,12 +85,16 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbLine = dbFile.readline()
 
         cipher = createCipher()
+        decDB = ""
 
         while dbLine:
-            
-            dbLine = dec(cipher, dbLine)
+            dbLine = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
+            decDB += dbLine + "\n" # remake decrypted version of the DB dump
+
             dbLine = dbFile.readline()
-            # maybe use .join to remake file in decrypted format
+
+        dbCursorMem.executescript(decDB) #insert data from db dump to intermediary database
+        self.updateTable(searchQ = None)
         
     def saveFile(self, saveType): #savetype ignored for now
         global dbName
@@ -140,7 +144,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def removeEntry(self):
         indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] #create list containing selected rows in table
-        print(indexList)
 
         for row in indexList: #hide the entry, don't actually delete - this allows for undo
             dbRow = int(self.loginTable.item(row, 0).text()) #get the index of the item in the DB from the ID column
