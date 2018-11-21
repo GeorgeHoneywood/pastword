@@ -67,7 +67,14 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
-    def newDB(self):
+    def newDB(self): # if there is already data in the table, this will not erase it
+        global dbName
+        dbName = QtGui.QFileDialog.getSaveFileName(self, "New database")
+
+        if not dbName:
+            warningBox("Please select a file", None)
+            return None
+
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConnMem.commit()
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
@@ -93,7 +100,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
             dbLine = dbFile.readline()
 
-        dbCursorMem.executescript(decDB) #insert data from db dump to intermediary database
+        dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable(searchQ = None)
         
     def saveFile(self, saveType): #savetype ignored for now
@@ -122,7 +129,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #first delete all rows from table
         self.loginTable.setRowCount(0)
 
-        if not dbData:
+        if not dbData: # if there are no items returned, db is empty
             self.loginTable.insertRow(self.loginTable.rowCount())
             self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
@@ -130,7 +137,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for rowNumber, rowData in enumerate(dbData):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
-                if self.actionHide_passwords.isChecked() and colNumber == 4:
+                if self.actionHide_passwords.isChecked() and colNumber == 4: # hide passwords if the box is checked
                     self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str("*" * len(cellData))))
                 else:
                     self.loginTable.setItem(rowNumber, colNumber, QtGui.QTableWidgetItem(str(cellData)))
@@ -238,6 +245,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def undo(self):
         lastItem = self.lastItemToUndo()
 
+        if not lastItem: # if lastitem is none
+            warningBox("No more actions to undo", None)
+            return None
+
+        dbCursorMem.execute("DELETE FROM undo WHERE undo_id = ?", lastItem)
+        dbConnMem.commit()
+
         dbCursorMem.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
         dbData = dbCursorMem.fetchone()
         if dbData[0] == 0: #if the item is already hidden, we know it has been edited, rather than deleted
@@ -253,16 +267,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ = None)
 
     def lastItemToUndo(self):
-        
         dbCursorMem.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
         lastItem = dbCursorMem.fetchone()
-
-        if not lastItem: # if lastitem is none
-            warningBox("No more actions to undo", None)
-            return None
-
-        dbCursorMem.execute("DELETE FROM undo WHERE undo_id = ?", lastItem)
-        dbConnMem.commit()
 
         return lastItem
 

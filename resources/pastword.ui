@@ -260,7 +260,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatabase">
@@ -299,8 +299,8 @@
     </property>
     <addaction name="actionPassword_Generator"/>
     <addaction name="separator"/>
-    <addaction name="actionClear_deleted_entries"/>
     <addaction name="actionHide_passwords"/>
+    <addaction name="actionClear_deleted_entries"/>
    </widget>
    <addaction name="menuDatabase"/>
    <addaction name="menuEdit"/>
@@ -351,6 +351,9 @@
    <property name="text">
     <string>Add entry</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
   </action>
   <action name="actionRemove_entry">
    <property name="icon">
@@ -359,6 +362,9 @@
    </property>
    <property name="text">
     <string>Remove entry</string>
+   </property>
+   <property name="shortcut">
+    <string>Backspace</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -405,6 +411,9 @@
    <property name="text">
     <string>Undo</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
   </action>
   <action name="actionRedo">
    <property name="icon">
@@ -413,6 +422,9 @@
    </property>
    <property name="text">
     <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
    </property>
   </action>
   <action name="actionHide_passwords">
