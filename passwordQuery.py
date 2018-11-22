@@ -24,8 +24,16 @@ class newPass(QtGui.QDialog):
         self.pbNewPass.setEnabled(False)
 
     def checkSame(self):
-        if self.txtNewPass1.text() != self.txtNewPass2.text():
-            self.txtNewPass2.setStyleSheet("color: red;")
+        if len(self.txtNewPass1.text()) <= 8:
+            self.txtNewPass1.setStyleSheet("color: yellow;")
+            return None
         else:
+            self.txtNewPass1.setStyleSheet("color: blue;")
+
+        if self.txtNewPass1.text() == self.txtNewPass2.text():
             self.txtNewPass2.setStyleSheet("color: green;")
             self.pbNewPass.setEnabled(True)
+
+        else:
+            self.txtNewPass2.setStyleSheet("color: red;")
+            self.pbNewPass.setEnabled(False)
