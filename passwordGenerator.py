@@ -8,7 +8,6 @@ from PyQt4.QtGui import *
 import resources_rc  # import icons
 from findDataFile import findDataFile
 
-
 class passwordGenerator(QtGui.QDialog):
     def __init__(self, currentWindow):
         QtGui.QDialog.__init__(self)
@@ -43,7 +42,7 @@ class passwordGenerator(QtGui.QDialog):
 
         length = self.sliderPasswordLength.value()
 
-        password = "".join(choice(charsToUse) for chars in range(length))
+        password = "".join(choice(charsToUse) for chars in range(length)) # jon with nothing for users password length, choosing random chars from selection
 
         self.txtGeneratedPassword.clear()
         self.txtGeneratedPassword.appendPlainText(password)

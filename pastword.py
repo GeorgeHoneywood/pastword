@@ -13,6 +13,7 @@ from passwordGenerator import passwordGenerator
 from warningBox import warningBox
 from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
+from passwordQuery import passCheck, newPass
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -20,22 +21,16 @@ dbName = "" #make file name global variable
 
 dbConnMem, dbCursorMem = dbConnect()
 
-class editEntryDialog(QtGui.QDialog):
-    def __init__(self, currentWindow):
-        QtGui.QDialog.__init__(self)
-        uic.loadUi(findDataFile("editEntry.ui"), self)
-
-        self.pbCancel.clicked.connect(self.close)
-        self.pbAccept.clicked.connect(currentWindow.acceptEntry)
-
 class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
-
         self.setWindowState(QtCore.Qt.WindowMaximized) #maximize the window
 
+        self.connectGUI()
+
+    def connectGUI(self):
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(lambda: self.saveFile("default"))
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
@@ -211,8 +206,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             dbConnMem.commit()
             self.addToUndoTable(dbCursorMem.lastrowid)
         
-        #modifiedItems.append(dbCursorMem.lastrowid)
-        
         dbConnMem.commit()
 
         self.updateTable(searchQ = None)
@@ -294,9 +287,16 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         aboutBox.exec_()
 
+class editEntryDialog(QtGui.QDialog):
+    def __init__(self, mainWindow):
+        QtGui.QDialog.__init__(self)
+        uic.loadUi(findDataFile("editEntry.ui"), self)
+
+        self.pbCancel.clicked.connect(self.close)
+        self.pbAccept.clicked.connect(mainWindow.acceptEntry)
+
 def main():
-    app = QtGui.QApplication(sys.argv)
-    app.setApplicationName("your title") #doesn't work
+    app = QtGui.QApplication(["Pastword"]) # sets the name of the application
     window = mainWindow()
     window.show()
     try:
