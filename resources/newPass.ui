@@ -40,7 +40,7 @@ password</string>
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QPushButton" name="pbEnterNewPass">
+    <widget class="QPushButton" name="pbAddPass">
      <property name="text">
       <string>Add password</string>
      </property>

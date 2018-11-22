@@ -6,15 +6,15 @@ from findDataFile import findDataFile
 import resources_rc  # import icons
 
 class passCheck(QtGui.QDialog):
-    def __init__(self, currentWindow):
+    def __init__(self, mainWindow):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("passCheck.ui"), self)
-        print(findDataFile("passCheck.ui"))
-        self.yeet()
-    def yeet(self):
-        print("yot3")
+        
+        self.pbCheckPass.clicked.connect(mainWindow.setPass)
 
 class newPass(QtGui.QDialog):
-    def __init__(self, currentWindow):
+    def __init__(self, mainWindow):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("newPass.ui"), self)
+
+        self.pbCheckPass.clicked.connect(mainWindow.setPass)

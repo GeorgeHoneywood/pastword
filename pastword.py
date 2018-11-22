@@ -18,6 +18,7 @@ from passwordQuery import passCheck, newPass
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
+dbOpen = False
 
 dbConnMem, dbCursorMem = dbConnect()
 
@@ -49,7 +50,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.about)
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
-        self.pwGenPopup = passwordGenerator(self)
+        self.pwGenPopup = passwordGenerator()
 
         self.actionClear_deleted_entries.triggered.connect(self.removeOldEntries)
 
@@ -66,7 +67,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
     def newDB(self): # if there is already data in the table, this will not erase it
-        global dbName
+        global dbName, dbOpen
+        dbOpen = True
+
         dbName = QtGui.QFileDialog.getSaveFileName(self, "New database")
 
         if not dbName:
@@ -78,15 +81,19 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
         dbConnMem.commit()
 
-        self.newPassPopup._exec()
-        
+        self.newPass()
+
     def openFile(self):
-        global dbName
+        global dbName, dbOpen
+        dbOpen = True
+
         dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database")
 
         if not dbName:
             warningBox("Please select a file", None)
             return None
+
+        self.checkPass()
 
         dbFile = open(dbName, "r")
         dbLine = dbFile.readline()
@@ -102,6 +109,17 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable(searchQ = None)
+
+    def newPass(self):
+        self.newPassPopup.exec_()
+    
+    def checkPass(self):
+        self.checkPassPopup.exec_()
+
+    def setPass(self, kind):
+        if kind == "check":
+            pass
+    
         
     def saveFile(self, saveType): #savetype ignored for now
         global dbName
@@ -152,6 +170,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def removeEntry(self):
         indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] #create list containing selected rows in table
 
+        if not indexList:
+            warningBox("Please select an item before trying to edit it", None)
+            return None
+
         for row in indexList: #hide the entry, don't actually delete - this allows for undo
             dbRow = int(self.loginTable.item(row, 0).text()) #get the index of the item in the DB from the ID column
             dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (dbRow, )) #hide said item
@@ -194,6 +216,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     
     def acceptEntry(self):
         loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+
+        if not dbOpen:
+            warningBox("Please open or create a DB before trying to edit it.", None)
+            return None
         
         indexList = self.loginTable.selectionModel().selectedRows()
         if not indexList: #if there are not not rows selcted, add an entry

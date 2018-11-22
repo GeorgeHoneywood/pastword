@@ -9,7 +9,7 @@ import resources_rc  # import icons
 from findDataFile import findDataFile
 
 class passwordGenerator(QtGui.QDialog):
-    def __init__(self, currentWindow):
+    def __init__(self):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("passwordGenerator.ui"), self)
 

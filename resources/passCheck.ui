@@ -44,7 +44,7 @@ password</string>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="txtPassNew">
+    <widget class="QLineEdit" name="txtPass">
      <property name="echoMode">
       <enum>QLineEdit::Password</enum>
      </property>
