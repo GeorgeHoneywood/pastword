@@ -60,6 +60,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
+        self.newPassPopup = newPass(self)
+        self.checkPassPopup = passCheck(self)
+
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
     def newDB(self): # if there is already data in the table, this will not erase it
@@ -74,6 +77,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbConnMem.commit()
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
         dbConnMem.commit()
+
+        self.newPassPopup._exec()
         
     def openFile(self):
         global dbName

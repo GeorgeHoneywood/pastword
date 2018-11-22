@@ -9,8 +9,12 @@ class passCheck(QtGui.QDialog):
     def __init__(self, currentWindow):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("passCheck.ui"), self)
+        print(findDataFile("passCheck.ui"))
+        self.yeet()
+    def yeet(self):
+        print("yot3")
 
 class newPass(QtGui.QDialog):
     def __init__(self, currentWindow):
         QtGui.QDialog.__init__(self)
-        uic.loadUi(findDataFile("passNew.ui"), self)
+        uic.loadUi(findDataFile("newPass.ui"), self)
