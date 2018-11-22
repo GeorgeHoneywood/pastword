@@ -10,11 +10,22 @@ class passCheck(QtGui.QDialog):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("passCheck.ui"), self)
         
-        self.pbCheckPass.clicked.connect(mainWindow.setPass)
+        self.pbCheckPass.clicked.connect(lambda: mainWindow.setPass(self, "check"))
 
 class newPass(QtGui.QDialog):
     def __init__(self, mainWindow):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("newPass.ui"), self)
 
-        self.pbCheckPass.clicked.connect(mainWindow.setPass)
+        self.pbNewPass.clicked.connect(lambda: mainWindow.setPass(self, "new"))
+        self.txtNewPass1.textChanged.connect(self.checkSame)
+        self.txtNewPass2.textChanged.connect(self.checkSame)
+
+        self.pbNewPass.setEnabled(False)
+
+    def checkSame(self):
+        if self.txtNewPass1.text() != self.txtNewPass2.text():
+            self.txtNewPass2.setStyleSheet("color: red;")
+        else:
+            self.txtNewPass2.setStyleSheet("color: green;")
+            self.pbNewPass.setEnabled(True)

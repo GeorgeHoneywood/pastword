@@ -19,6 +19,7 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
 dbOpen = False
+password = ""
 
 dbConnMem, dbCursorMem = dbConnect()
 
@@ -98,7 +99,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbFile = open(dbName, "r")
         dbLine = dbFile.readline()
 
-        cipher = createCipher()
+        cipher = createCipher(password)
         decDB = ""
 
         while dbLine:
@@ -116,18 +117,22 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def checkPass(self):
         self.checkPassPopup.exec_()
 
-    def setPass(self, kind):
+    def setPass(self, dialog, kind):
+        global password
         if kind == "check":
-            pass
-    
+            password = dialog.txtPass.text()
+        else:
+            password = dialog.txtNewPass2.text()
         
+        dialog.close()
+    
     def saveFile(self, saveType): #savetype ignored for now
         global dbName
 
         if not dbName:
             dbName = "defaultSave.name"
 
-        cipher = createCipher()
+        cipher = createCipher(password)
 
         with open(dbName, "w") as dbFile:
             for decLine in dbConnMem.iterdump():
@@ -171,7 +176,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] #create list containing selected rows in table
 
         if not indexList:
-            warningBox("Please select an item before trying to edit it", None)
+            warningBox("Please select an item before trying to delete it", None)
             return None
 
         for row in indexList: #hide the entry, don't actually delete - this allows for undo

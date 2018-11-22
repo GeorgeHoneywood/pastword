@@ -8,11 +8,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from warningBox import warningBox
 
-def createCipher():
-    #password = input("Enter your password:\n")
-    password = "dab password"
+def createCipher(password):
     key = deriveKey(password)
-    #print(key)
 
     cipher = Fernet(key)
     return cipher
