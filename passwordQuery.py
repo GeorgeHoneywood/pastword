@@ -25,7 +25,7 @@ class newPass(QtGui.QDialog):
 
     def checkSame(self):
         if len(self.txtNewPass1.text()) <= 8:
-            self.txtNewPass1.setStyleSheet("color: yellow;")
+            self.txtNewPass1.setStyleSheet("color: orange;")
             return None
         else:
             self.txtNewPass1.setStyleSheet("color: blue;")
