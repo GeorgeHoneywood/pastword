@@ -102,11 +102,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         cipher = createCipher(password)
         decDB = ""
 
-        while dbLine:
-            dbLine = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
-            decDB += dbLine + "\n" # remake decrypted version of the DB dump
-
-            dbLine = dbFile.readline()
+        decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable(searchQ = None)
@@ -133,11 +129,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             dbName = "defaultSave.name"
 
         cipher = createCipher(password)
-
+        
+        decDB = ""
+        for decLine in dbConnMem.iterdump():
+                decDB += decLine + "\n"
+                
         with open(dbName, "w") as dbFile:
-            for decLine in dbConnMem.iterdump():
-                encLine = enc(cipher, decLine)
-                dbFile.write("{}\n".format(encLine))
+            dbFile.write(str(enc(cipher, decDB)))
 
     def returnItems(self, searchQ):
         if searchQ is None:
