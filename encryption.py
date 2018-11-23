@@ -30,15 +30,15 @@ def deriveKey(password):
 
     return key
 
-def enc(cipher, decLine):
-    decLine = str(decLine).encode()
-    return cipher.encrypt(decLine)
+def enc(cipher, decDB):
+    decDB = str(decDB).encode()
+    return cipher.encrypt(decDB)
 
-def dec(cipher, encLine):
+def dec(cipher, encDB):
     try:
-        decLine = cipher.decrypt(encLine)
+        decDB = cipher.decrypt(encDB)
     except:
         warningBox("Please check your password", None)
         raise Exception("PasswordError")
 
-    return decLine.decode()
+    return decDB.decode()
