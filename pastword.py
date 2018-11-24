@@ -71,7 +71,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName, dbOpen
         dbOpen = True
 
-        dbName = QtGui.QFileDialog.getSaveFileName(self, "New database")
+        dbName = QtGui.QFileDialog.getSaveFileName(self, "New database") + ".pwdb"
 
         if not dbName:
             warningBox("Please select a file", None)
@@ -126,7 +126,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName
 
         if not dbName:
-            dbName = "defaultSave.name"
+            dbName = "defaultSave.db"
 
         cipher = createCipher(password)
         
