@@ -111,4 +111,5 @@ venv.bak/
 .vscode
 
 #don't upload your passwords you numpty
-logins.db
+*.db
+*.pwdb
