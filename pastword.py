@@ -34,6 +34,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def connectGUI(self):
         self.actionOpen.triggered.connect(self.openFile)
+        self.actionClose.triggered.connect(self.closeFile)
         self.actionSave.triggered.connect(lambda: self.saveFile("default"))
         self.actionSave_as.triggered.connect(lambda: self.saveFile("saveAs"))
         self.actionNewDB.triggered.connect(self.newDB)
@@ -100,6 +101,18 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
+        self.updateTable(searchQ = None)
+
+    def closeFile(self):
+        global dbName, password, dbOpen
+        dbName = ""
+        password = ""
+        dbOpen = False
+
+        dbCursorMem.execute("DROP TABLE IF EXISTS logins")
+        dbCursorMem.execute("DROP TABLE IF EXISTS undo")
+        dbConnMem.commit()
+
         self.updateTable(searchQ = None)
 
     def newPass(self):
