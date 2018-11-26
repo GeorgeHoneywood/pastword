@@ -43,7 +43,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionRemove_entry.triggered.connect(self.removeEntry)
         self.actionEdit_entry.triggered.connect(self.editEntry)
         self.loginTable.doubleClicked.connect(self.editEntry)
-        self.editPopup = editEntryDialog(self)
 
         self.actionUndo.triggered.connect(self.undo)
         #self.actionRedo.triggered.connect(self.redo) #need to impliment redo
@@ -51,7 +50,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.about)
 
         self.actionPassword_Generator.triggered.connect(self.passwordGenerator)
-        self.pwGenPopup = passwordGenerator()
 
         self.actionClear_deleted_entries.triggered.connect(self.removeOldEntries)
 
@@ -61,9 +59,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.txtSearch.returnPressed.connect(self.searchDB)
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
-
-        self.newPassPopup = newPass(self)
-        self.checkPassPopup = passCheck(self)
 
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
@@ -108,9 +103,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ = None)
 
     def newPass(self):
+        self.newPassPopup = newPass(self)
+
         self.newPassPopup.exec_()
     
     def checkPass(self):
+        self.checkPassPopup = passCheck(self)
+
         self.checkPassPopup.exec_()
 
     def setPass(self, dialog, kind):
@@ -167,7 +166,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 
     def addEntry(self): #effectively the same as edit entry, but dont need to load values into popup
-        self.clearEditPopup() #remove entries from the popup before displaying
+        self.editPopup = editEntryDialog(self) #have to create a new one each time, means that text is not saved between popup openings
+
         self.editPopup.exec_()
 
     def removeEntry(self):
@@ -186,6 +186,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.updateTable(searchQ = None)
 
     def editEntry(self):
+        self.editPopup = editEntryDialog(self)
+
         indexes = self.loginTable.selectionModel().selectedRows()
         if not indexes:
             warningBox("Please select an item before trying to edit it", None)
@@ -204,24 +206,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.clearEditPopup()
 
         self.editPopup.exec_()
-
-    def clearEditPopup(self):
-        # fieldNames = ["txtSite", "txtUsername", "txtEmail", "txtPassword", "txtNotes"] #would be nice if i could do it like so
-
-        # for fieldName in fieldNames:
-        #     self.editPopup.{}.setText("").format{fieldName}
-
-        self.editPopup.txtSite.setText("")
-        self.editPopup.txtUsername.setText("")
-        self.editPopup.txtEmail.setText("")
-        self.editPopup.txtPassword.setText("")
-        self.editPopup.txtNotes.setText("")
     
     def acceptEntry(self):
         loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
 
         if not dbOpen:
             warningBox("Please open or create a DB before trying to edit it.", None)
+            self.editPopup.close()
             return None
         
         indexList = self.loginTable.selectionModel().selectedRows()
@@ -246,6 +237,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.editPopup.close()
 
     def passwordGenerator(self):
+        self.pwGenPopup = passwordGenerator()
+
         self.pwGenPopup.exec_()
 
     def searchDB(self):
@@ -328,6 +321,8 @@ class editEntryDialog(QtGui.QDialog):
 
         self.pbCancel.clicked.connect(self.close)
         self.pbAccept.clicked.connect(mainWindow.acceptEntry)
+
+        self.pbEditPWGen.clicked.connect(mainWindow.passwordGenerator)
 
 def main():
     app = QtGui.QApplication(["Pastword"]) # sets the name of the application

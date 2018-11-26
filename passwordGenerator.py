@@ -50,3 +50,4 @@ class passwordGenerator(QtGui.QDialog):
     def copy2Clipboard(self):
         QtGui.QApplication.clipboard().clear()
         QtGui.QApplication.clipboard().setText(self.txtGeneratedPassword.toPlainText())
+        self.close()

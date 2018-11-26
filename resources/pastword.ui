@@ -270,10 +270,10 @@
     <addaction name="actionOpen"/>
     <addaction name="actionNewDB"/>
     <addaction name="separator"/>
+    <addaction name="actionClose"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
     <addaction name="separator"/>
-    <addaction name="actionRefresh_table"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -300,6 +300,7 @@
     <addaction name="actionPassword_Generator"/>
     <addaction name="separator"/>
     <addaction name="actionHide_passwords"/>
+    <addaction name="actionRefresh_table_2"/>
     <addaction name="actionClear_deleted_entries"/>
    </widget>
    <addaction name="menuDatabase"/>
@@ -320,6 +321,9 @@
    <property name="text">
     <string>Open</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionSave">
    <property name="icon">
@@ -328,6 +332,9 @@
    </property>
    <property name="text">
     <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionNew">
@@ -384,6 +391,9 @@
    <property name="text">
     <string>Password generator</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
   </action>
   <action name="actionEdit_entry">
    <property name="icon">
@@ -401,6 +411,9 @@
    </property>
    <property name="text">
     <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionUndo">
@@ -446,6 +459,22 @@
   <action name="actionRefresh_table">
    <property name="text">
     <string>Refresh table</string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionRefresh_table_2">
+   <property name="text">
+    <string>Refresh table</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
  </widget>

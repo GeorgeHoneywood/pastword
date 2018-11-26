@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>425</width>
-    <height>210</height>
+    <height>260</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,11 +19,15 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>210</height>
+    <height>260</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Edit entry</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/table/icons/table_edit.png</normaloff>:/table/icons/table_edit.png</iconset>
   </property>
   <layout class="QFormLayout" name="formLayout_2">
    <property name="fieldGrowthPolicy">
@@ -69,24 +73,31 @@
    <item row="3" column="1">
     <widget class="QLineEdit" name="txtPassword"/>
    </item>
-   <item row="4" column="0">
+   <item row="4" column="1">
+    <widget class="QPushButton" name="pbEditPWGen">
+     <property name="text">
+      <string>Genenerate password</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
     <widget class="QLabel" name="lblNotes">
      <property name="text">
       <string>Notes</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
+   <item row="5" column="1">
     <widget class="QLineEdit" name="txtNotes"/>
    </item>
-   <item row="5" column="0">
+   <item row="6" column="0">
     <widget class="QPushButton" name="pbCancel">
      <property name="text">
       <string>Cancel</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
+   <item row="6" column="1">
     <widget class="QPushButton" name="pbAccept">
      <property name="text">
       <string>Accept changes</string>
@@ -104,6 +115,8 @@
   <tabstop>pbAccept</tabstop>
   <tabstop>pbCancel</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
