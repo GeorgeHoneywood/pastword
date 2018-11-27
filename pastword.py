@@ -15,6 +15,13 @@ from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
 from passwordQuery import passCheck, newPass
 
+# import platform
+
+# if platform.system() == "Windows":
+# import ctypes
+# myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
+# ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
 dbName = "" #make file name global variable
@@ -73,6 +80,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
             warningBox("Please select a file", None)
             return None
 
+        self.setTitle()
+
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
         dbConnMem.commit()
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
@@ -89,6 +98,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if not dbName:
             warningBox("Please select a file", None)
             return None
+
+        self.setTitle()
 
         self.checkPass()
 
@@ -109,11 +120,13 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         password = ""
         dbOpen = False
 
+        self.setTitle()
+
         dbCursorMem.execute("DROP TABLE IF EXISTS logins")
         dbCursorMem.execute("DROP TABLE IF EXISTS undo")
         dbConnMem.commit()
 
-        self.updateTable(searchQ = None)
+        self.loginTable.setRowCount(0) #remove all rows in the table
 
     def newPass(self):
         self.newPassPopup = newPass(self)
@@ -124,6 +137,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.checkPassPopup = passCheck(self)
 
         self.checkPassPopup.exec_()
+
+    def setTitle(self):
+        if dbName:
+            self.setWindowTitle("Pastword - \"{}\"".format(dbName))
+        else:
+            self.setWindowTitle("Pastword")
 
     def setPass(self, dialog, kind):
         global password
