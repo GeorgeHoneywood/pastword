@@ -15,7 +15,7 @@ from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
 from passwordQuery import passCheck, newPass
 
-import platform # some code to set the window title properly on windows
+import platform # some code to set the window icon properly on windows
 if platform.system() == "Windows":
     import ctypes
     appID = u'pastword'
@@ -73,7 +73,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName, dbOpen
         dbOpen = True
 
-        dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="*.pwdb") + ".pwdb" # filter means that it only displays files with ".pwdb" extension
+        dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="Pastword Databases (*.pwdb)") # filter means that it only displays files with ".pwdb" extension
+
+        if dbName[-5:] != ".pwdb": # for some reason windows adds .pwdb to filename automatically, so we check to see if the last chars are already correct or not
+            dbName += ".pwdb"
 
         if not dbName:
             warningBox("Please select a file", None)
@@ -92,8 +95,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName, dbOpen
         dbOpen = True
 
-        if not dbName:
-            dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="*.pwdb")
+        dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="Pastword Databases (*.pwdb)")
 
         self.setTitle()
 
@@ -105,10 +107,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         cipher = createCipher(password)
         decDB = ""
 
-        try:
-            decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
-        except:
-            self.openFile()
+        decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable(searchQ = None)
@@ -357,6 +356,8 @@ class editEntryDialog(QtGui.QDialog):
 
 def main():
     app = QtGui.QApplication(["Pastword"]) # sets the name of the application
+    if platform.system() == "Windows": #if on windows set style to Cleanlooks
+        app.setStyle("Cleanlooks")
     window = mainWindow()
     window.show()
     try:
