@@ -38,7 +38,7 @@ def dec(cipher, encDB):
     try:
         decDB = cipher.decrypt(encDB)
     except:
-        warningBox("Please check your password", None)
+        warningBox("Please check your password, and whether database file is valid", None)
         raise Exception("PasswordError")
 
     return decDB.decode()

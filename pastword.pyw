@@ -15,12 +15,11 @@ from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
 from passwordQuery import passCheck, newPass
 
-# import platform
-
-# if platform.system() == "Windows":
-# import ctypes
-# myappid = u'mycompany.myproduct.subproduct.version' # arbitrary string
-# ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+import platform # some code to set the window title properly on windows
+if platform.system() == "Windows":
+    import ctypes
+    appID = u'pastword'
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appID)
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 
@@ -93,11 +92,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         global dbName, dbOpen
         dbOpen = True
 
-        dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="*.pwdb")
-
         if not dbName:
-            warningBox("Please select a file", None)
-            return None
+            dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="*.pwdb")
 
         self.setTitle()
 
@@ -109,7 +105,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         cipher = createCipher(password)
         decDB = ""
 
-        decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
+        try:
+            decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
+        except:
+            self.openFile()
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable(searchQ = None)

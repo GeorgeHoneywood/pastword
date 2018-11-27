@@ -10,4 +10,4 @@ Here is a small list of improvements or features that I need to add to my progra
 * Reveal password when held down in table.
 * Link to password generator from the edit password menu, or simplified version of.
 * Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed. Still need to do undo for new entries. Also undo seems to now be broken :/
-* Change window title when database is opened, to the name of the database.
+* If you cannot answer password correct, you get stuck in a loop.
