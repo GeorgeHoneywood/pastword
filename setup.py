@@ -19,21 +19,23 @@ base = None
 if sys.platform == 'win32':
     base = 'Win32GUI'
 
-includefiles = ['resources/pastword.ui', 'resources/editEntry.ui', 'resources/passwordGenerator.ui']
+includefiles = ['resources/pastword.ui', 'resources/editEntry.ui', 'resources/passwordGenerator.ui', 'resources/newPass.ui', 'resources/passCheck.ui', 'resources/resources.qrc']
+includepackages = ['sqlite3', 'PyQt4', 'base64', 'cryptography']
 
 options = {
     'build_exe': {
         'includes': 'atexit',
-        'include_files': includefiles
+        'include_files': includefiles,
+        'packages': includepackages
     }
 }
 
 executables = [
-    Executable('main.py', base=base)
+    Executable('pastword.pyw', base=base)
 ]
 
 setup(name='Pastword',
-      version='0.1',
+      version='1.0',
       description='Pastword password manager, written using PyQt.',
       options=options,
       executables=executables 
