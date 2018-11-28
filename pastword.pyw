@@ -26,6 +26,7 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
 dbName = "" #make file name global variable
 dbOpen = False
 password = ""
+salt = ""
 
 dbConnMem, dbCursorMem = dbConnect()
 
@@ -70,7 +71,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
     def newDB(self): # if there is already data in the table, this will not erase it
-        global dbName, dbOpen
+        global dbName, dbOpen, salt
         dbOpen = True
 
         dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="Pastword Databases (*.pwdb)") # filter means that it only displays files with ".pwdb" extension
@@ -89,10 +90,12 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
         dbConnMem.commit()
 
+        salt = os.urandom(16)
+
         self.newPass()
 
     def openFile(self):
-        global dbName, dbOpen
+        global dbName, dbOpen, salt
         dbOpen = True
 
         dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="Pastword Databases (*.pwdb)")
@@ -102,9 +105,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.checkPass()
 
         dbFile = open(dbName, "r")
+        salt = dbFile.readline()[2:-2].encode()
+
         dbLine = dbFile.readline()
 
-        cipher = createCipher(password)
+        cipher = createCipher(password, salt)
         decDB = ""
 
         decDB = dec(cipher, dbLine[2:-1].encode()) # remove \n chars from end of string & and old chars from being byte encoded
@@ -157,13 +162,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if not dbName:
             dbName = "defaultSave.db"
 
-        cipher = createCipher(password)
+        cipher = createCipher(password, salt)
         
         decDB = ""
         for decLine in dbConnMem.iterdump():
                 decDB += decLine + "\n"
                 
         with open(dbName, "w") as dbFile:
+            dbFile.write(str(salt) + "\n")
+
             dbFile.write(str(enc(cipher, decDB)))
 
     def returnItems(self, searchQ):

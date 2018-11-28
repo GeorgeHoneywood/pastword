@@ -8,14 +8,13 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from warningBox import warningBox
 
-def createCipher(password):
-    key = deriveKey(password)
+def createCipher(password, salt):
+    key = deriveKey(password, salt)
 
     cipher = Fernet(key)
     return cipher
 
-def deriveKey(password):
-    salt = b'\xb9G)\xaf\xdb8\xc2\xe7\xfe\x9bw\xcbb\xe3\xe7U'
+def deriveKey(password, salt):
     bytesPass = password.encode()
 
     kdf = PBKDF2HMAC(
