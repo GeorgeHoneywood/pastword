@@ -72,8 +72,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def newDB(self): # if there is already data in the table, this will not erase it
         global dbName, dbOpen, salt
-        dbOpen = True
+        self.closeFile()
 
+        dbOpen = True
         dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="Pastword Database (*.pwdb)") # filter means that it only displays files with ".pwdb" extension
         if dbName[-5:] != ".pwdb": # for some reason windows adds .pwdb to filename automatically, so we check to see if the last chars are already correct or not
             dbName += ".pwdb"
@@ -95,17 +96,16 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def openFile(self):
         global dbName, dbOpen, salt
-        dbOpen = True
+        self.closeFile()
 
+        dbOpen = True
         dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="Pastword Database (*.pwdb)")
 
         self.setTitle()
-
         self.checkPass()
 
         dbFile = open(dbName, "rb")
         salt = dbFile.read(16) # first 16 bytes of file are the salt
-
         encDB = dbFile.read() # rest of file is the encrypted db
 
         cipher = createCipher(password, salt)
@@ -281,6 +281,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pwGenPopup.exec_()
 
     def searchDB(self):
+        if not dbOpen:
+            warningBox("Please open or create a DB before trying to search it.", None)
+            return None
+
         searchQ = self.txtSearch.text()
         if not searchQ: #if nothing in text box, return none for query
             searchQ = None
