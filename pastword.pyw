@@ -1,43 +1,44 @@
-import os
-import sqlite3
-import sys
-from shutil import copyfile
+import os #for generating random bytes
+import sqlite3 #for iteracting with database
+import sys #to exit program
 
-from PyQt4 import QtCore, QtGui, uic
+from PyQt4 import QtCore, QtGui, uic #pyqt4 stuff, uicis used to convert .ui files to python code
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-import resources_rc  # import icons
-from findDataFile import findDataFile
+import resources_rc  # import icons from qt resources file
+from findDataFile import findDataFile # detect whether app is frozen or not, chnage where to load files from
+
+#import functions from my own files
 from passwordGenerator import passwordGenerator
 from warningBox import warningBox
 from encryption import enc, dec, createCipher
 from dbConnect import dbConnect
 from passwordQuery import passCheck, newPass
 
-import platform # some code to set the window icon properly on windows
+import platform # some code to set the window icon properly on windows. if not used, program has python icon - not needed on linux
 if platform.system() == "Windows":
     import ctypes
     appID = u'pastword'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appID)
 
-Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui"))
+Ui_MainWindow, QtBaseClass = uic.loadUiType(findDataFile("pastword.ui")) # set the main windows ui to the pastword form
 
-dbName = "" #make file name global variable
-dbOpen = False
-password = ""
-salt = ""
+dbName = "" # make file name global variable
+dbOpen = False # used to find whether a db is open or not
+password = "" # used to temp store the users password, so can be kdf'd
+salt = "" # store salt used for encryption and decryption
 
-dbConnMem, dbCursorMem = dbConnect()
+dbConnMem, dbCursorMem = dbConnect() # create a connection to a database in memory
 
-class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    def __init__(self):
+class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window of the GUI
+    def __init__(self): # code to be run when initialised
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
-        self.setWindowState(QtCore.Qt.WindowMaximized) #maximize the window
+        self.setWindowState(QtCore.Qt.WindowMaximized) # maximize the window
 
-        self.connectGUI()
+        self.connectGUI() # sub to connect UI elements to functions
 
     def connectGUI(self):
         self.actionOpen.triggered.connect(self.openFile)
@@ -70,67 +71,71 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
 
-    def newDB(self): # if there is already data in the table, this will not erase it
-        global dbName, dbOpen, salt
-        self.closeFile()
+    def newDB(self):
+        global dbName, dbOpen, salt # allows me to interact with some global variables
+        self.closeFile() # ensure that the previous tables and flags are cleared
 
-        dbOpen = True
+        dbOpen = True # mark as having an open database
         dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="Pastword Database (*.pwdb)") # filter means that it only displays files with ".pwdb" extension
-        if dbName[-5:] != ".pwdb": # for some reason windows adds .pwdb to filename automatically, so we check to see if the last chars are already correct or not
-            dbName += ".pwdb"
 
-        if not dbName:
+        if not dbName: # ensure that the user has actually picked something
             warningBox("Please select a file", None)
             return None
 
-        self.setTitle()
+        if dbName[-5:] != ".pwdb": # for some reason windows adds .pwdb to filename automatically, so we check to see if the last chars are already correct or not
+            dbName += ".pwdb" # append the .pwdb ext
 
-        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)")
-        dbConnMem.commit()
+        self.setTitle() # set the window title to that of the opened file
+
+        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)") # create the tables in the memory database
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
-        dbConnMem.commit()
+        dbConnMem.commit() # commit actually makes the changes to the database
 
-        salt = os.urandom(16)
+        salt = os.urandom(16) # generate a 16 byte long salt
 
-        self.newPass()
+        self.newPass() # query the user for a new password
 
     def openFile(self):
-        global dbName, dbOpen, salt
-        self.closeFile()
+        global dbName, dbOpen, salt # also need to interact with these globals
+        self.closeFile() # ensure that previous file was closed
 
-        dbOpen = True
+        dbOpen = True # set dbOpen flag
         dbName = QtGui.QFileDialog.getOpenFileName(self, "Open database", filter="Pastword Database (*.pwdb)")
 
-        self.setTitle()
-        self.checkPass()
+        if not dbName:
+            warningBox("Please select a file", None)
+            return None           
 
-        dbFile = open(dbName, "rb")
+        self.setTitle()
+        self.checkPass() # ask user for the password that they used to encrypt last time
+
+        dbFile = open(dbName, "rb") # read in file as bytes
         salt = dbFile.read(16) # first 16 bytes of file are the salt
         encDB = dbFile.read() # rest of file is the encrypted db
 
-        cipher = createCipher(password, salt)
+        cipher = createCipher(password, salt) # create the cipher to use for decryption
         decDB = ""
 
-        decDB = dec(cipher, encDB)
+        decDB = dec(cipher, encDB) # decrpyt the bytes from the file
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
-        self.updateTable(searchQ = None)
+        self.updateTable(searchQ = None) # ensure that table reflects the contents of the DB
 
-    def closeFile(self):
+    def closeFile(self): # reset all flags used for handing a database
         global dbName, password, dbOpen
         dbName = ""
         password = ""
         dbOpen = False
 
-        self.setTitle()
+        self.setTitle() # remove file name from title
 
-        dbCursorMem.execute("DROP TABLE IF EXISTS logins")
+        dbCursorMem.execute("DROP TABLE IF EXISTS logins") #if tables exist, remove them
         dbCursorMem.execute("DROP TABLE IF EXISTS undo")
         dbConnMem.commit()
 
-        self.loginTable.setRowCount(0) #remove all rows in the table
+        self.loginTable.setRowCount(0) #remove all rows in the table, as it is now empty
 
-    def newPass(self):
+    def newPass(self): #create an object of the new pass class and show it modally
         self.newPassPopup = newPass(self)
 
         self.newPassPopup.exec_()
@@ -140,15 +145,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.checkPassPopup.exec_()
 
-    def setTitle(self):
+    def setTitle(self): # set the window title to the name of the open file
         if dbName:
-            self.setWindowTitle("Pastword - \"{}\"".format(dbName))
+            self.setWindowTitle("Pastword - \"{}\"".format(dbName)) # backslashes are needed to escape quotes
         else:
             self.setWindowTitle("Pastword")
 
-    def setPass(self, dialog, kind):
+    def setPass(self, dialog, kind): # read the password from the form, and set the global var for it
         global password
-        if kind == "check":
+        if kind == "check": # find what type of pass the use has entered
             password = dialog.txtPass.text()
         else:
             password = dialog.txtNewPass2.text()
@@ -160,26 +165,30 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         if saveType == "saveAs": # if the user wants to save as, allow them to change the db name
             dbName = QtGui.QFileDialog.getSaveFileName(self, "New database", filter="Pastword Database (*.pwdb)")
+            if not dbName: # ensure that the user has actually picked something
+                warningBox("Please select a file", None)
+                return None
             if dbName[-5:] != ".pwdb":
                 dbName += ".pwdb"
+
             self.setTitle()
 
         cipher = createCipher(password, salt)
         
         decDB = ""
-        for decLine in dbConnMem.iterdump():
-                decDB += decLine + "\n"
+        for decLine in dbConnMem.iterdump(): # iterate over the sql dump of the database. this provides the sql code to create it
+                decDB += decLine + "\n" # provided line by line, so add newline to format correctly
                 
         with open(dbName, "wb") as dbFile:
-            dbFile.write(salt)
+            dbFile.write(salt) # write the salt to the first 16 bytes
 
-            dbFile.write(enc(cipher, decDB))
+            dbFile.write(enc(cipher, decDB)) # write the rest of the encrypted data
 
     def returnItems(self, searchQ):
-        if searchQ is None:
+        if searchQ is None: # if not a search, return all values
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         else:
-            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? AND hidden = 0", (searchQ, ))
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? OR username LIKE ? OR email LIKE ? OR notes LIKE ? AND hidden = 0", (searchQ, searchQ, searchQ, searchQ))
         return dbCursorMem.fetchall()
 
     def updateTable(self, searchQ):
