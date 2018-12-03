@@ -72,8 +72,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
-        self.loginTable.customContextMenuRequested.connect(self.contextMenuEvent) #tried to impliment context menu, doesn't work
-
     def newDB(self):
         global dbName, dbOpen, salt # allows me to interact with some global variables
         self.closeFile() # ensure that the previous tables and flags are cleared
@@ -310,14 +308,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         else:
             self.txtSearch.textChanged.disconnect(self.searchDB)
     
-    def contextMenuEvent(self, event):
-        contextMenu = QtGui.QMenu("DB Entry")
-        edit = contextMenu.addAction("Edit entry")
-
-        edit.triggered.connect(self.editEntry)
-        
-        contextMenu.exec_(event.screenPos())
-
     def undo(self):
         lastItem = self.lastItemToUndo()
 
@@ -367,12 +357,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         edit = menu.addAction("Edit entry")
         delete = menu.addAction("Delete entry")
 
+        indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()]
         action = menu.exec_(self.mapToGlobal(position))
-        if action == quitAction:
-            self.about()
-        elif action == openURL:
-            self.openURL()
 
+        if not indexList or not action:
+            print("No item or action selected")
+            return None
+
+        if action == openURL:
+            for index in indexList:
+                QtGui.QDesktopServices.openUrl(QtCore.QUrl(self.loginTable.item(index, 1).text()))
+        elif action == copyPW:
+            QtGui.QApplication.clipboard().clear()
+            QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 4).text())
+            
     def about(self):
         aboutBox = QtGui.QMessageBox()
         aboutBox.setIcon(QtGui.QMessageBox.Information)
