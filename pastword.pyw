@@ -38,6 +38,9 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.setupUi(self)
         self.setWindowState(QtCore.Qt.WindowMaximized) # maximize the window
 
+        self.loginTable.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.loginTable.customContextMenuRequested.connect(self.contextMenu)
+
         self.connectGUI() # sub to connect UI elements to functions
 
     def connectGUI(self):
@@ -355,6 +358,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         dbCursorMem.execute("DELETE FROM undo")
         
         dbConnMem.commit()
+
+    def contextMenu(self, position):
+        menu = QtGui.QMenu()
+        openURL = menu.addAction("Open URL")        
+        copyPW = menu.addAction("Copy password")
+        copyUN = menu.addAction("Copy username")
+        edit = menu.addAction("Edit entry")
+        delete = menu.addAction("Delete entry")
+
+        action = menu.exec_(self.mapToGlobal(position))
+        if action == quitAction:
+            self.about()
+        elif action == openURL:
+            self.openURL()
 
     def about(self):
         aboutBox = QtGui.QMessageBox()
