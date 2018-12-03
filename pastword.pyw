@@ -240,7 +240,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         if not indexes:
             warningBox("Please select an item before trying to edit it", None)
             return None
-
         index = indexes[0].row()
 
         self.actionHide_passwords.setChecked(False)
@@ -255,7 +254,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             warningBox("Ensure all fields are filled out", detail)
             self.clearEditPopup()
 
-        self.actionHide_passwords.setChecked(True)    
+        self.actionHide_passwords.setChecked(True)
+        self.loginTable.selectRow(index)
 
         self.editPopup.exec_()
     
