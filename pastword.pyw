@@ -117,7 +117,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         cipher = createCipher(password, salt) # create the cipher to use for decryption
         decDB = ""
 
-        decDB = dec(cipher, encDB) # decrpyt the bytes from the file
+        try:
+            decDB = dec(cipher, encDB) # decrpyt the bytes from the file
+        except:
+            self.closeFile()
 
         dbCursorMem.executescript(decDB) #run the sql dump to rebuild tables and contents of them
         self.updateTable() # ensure that table reflects the contents of the DB
@@ -195,14 +198,14 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
     def updateTable(self, searchQ = None):
         dbData = self.returnItems(searchQ)
 
-        #first delete all rows from table
+        # first delete all rows from table
         self.loginTable.setRowCount(0)
 
         if not dbData: # if there are no items returned, db is empty
             self.loginTable.insertRow(self.loginTable.rowCount())
             self.loginTable.setItem(0, 0, QtGui.QTableWidgetItem("No data to display! - Either open a DB or widen your search"))
 
-        #load in all items from db, only creating if necessary 
+        # load in all items from db, only creating if necessary 
         for rowNumber, rowData in enumerate(dbData):
             self.loginTable.insertRow(self.loginTable.rowCount())
             for colNumber, cellData in enumerate(rowData):
@@ -214,20 +217,20 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         header = self.loginTable.horizontalHeader()
         header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 
-    def addEntry(self): #effectively the same as edit entry, but dont need to load values into popup
+    def addEntry(self): # effectively the same as edit entry, but dont need to load values into popup
         self.editPopup = editEntryDialog(self) #have to create a new one each time, means that text is not saved between popup openings
         self.editPopup.exec_()
 
     def removeEntry(self):
-        indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] #create list containing selected rows in table
+        indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()] # create list containing selected rows in table
 
         if not indexList:
             warningBox("Please select an item before trying to delete it", None)
             return None
 
-        for row in indexList: #hide the entry, don't actually delete - this allows for undo
-            dbRow = int(self.loginTable.item(row, 0).text()) #get the index of the item in the DB from the ID column
-            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (dbRow, )) #hide said item
+        for row in indexList: # ide the entry, don't actually delete - this allows for undo
+            dbRow = int(self.loginTable.item(row, 0).text()) # get the index of the item in the DB from the ID column
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (dbRow, )) # hide said item
             dbConnMem.commit()
             self.addToUndoTable(dbRow)
 
@@ -260,7 +263,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.editPopup.exec_()
     
     def acceptEntry(self):
-        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0)
+        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0) # None so that it auto allocates an ID, 0 so that it is not marked as hidden
 
         if not dbOpen:
             warningBox("Please open or create a DB before trying to edit it.", None)
@@ -268,18 +271,18 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             return None
         
         indexList = self.loginTable.selectionModel().selectedRows()
-        if not indexList: #if there are not not rows selcted, add an entry
-             #None so that it auto allocates an ID, 0 so that it is not marked as hidden
+        if not indexList: # if there are not not rows selcted, add an entry
+
             dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
             
-        else: #if the user has selected a row
+        else: # if the user has selected a row
             indexTable = indexList[0].row()
             indexDB = int(self.loginTable.item(indexTable, 0).text())
-            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) #hide the old entry
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (indexDB, )) # hide the old entry
             dbConnMem.commit()
-            self.addToUndoTable(indexDB) #add this entry to the undo list
+            self.addToUndoTable(indexDB) # add this entry to the undo list
 
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) #add a new entry
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) # add a new entry
             dbConnMem.commit()
             self.addToUndoTable(dbCursorMem.lastrowid)
         
@@ -299,7 +302,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             return None
 
         searchQ = self.txtSearch.text()
-        if not searchQ: #if nothing in text box, return none for query
+        if not searchQ: # if nothing in text box, return none for query
             searchQ = None
         else:
             searchQ = "{}{}{}".format("%", searchQ, "%")
@@ -323,8 +326,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
         dbCursorMem.execute("SELECT hidden FROM logins WHERE login_id = ?", (lastItem))
         dbData = dbCursorMem.fetchone()
-        if dbData[0] == 0: #if the item is already hidden, we know it has been edited, rather than deleted
-            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem)) #hide the edited item
+        if dbData[0] == 0: # if the item is already hidden, we know it has been edited, rather than deleted
+            dbCursorMem.execute("UPDATE logins SET hidden = 1 WHERE login_id = ?", (lastItem)) # hide the edited item
 
             lastItem = self.lastItemToUndo()
             dbCursorMem.execute("UPDATE logins SET hidden = 0 WHERE login_id = ?", (lastItem))
@@ -347,7 +350,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         dbConnMem.commit()
 
     def removeOldEntries(self):
-        dbCursorMem.execute("DELETE FROM logins WHERE hidden = 1") #delete all of the old entries from the table
+        dbCursorMem.execute("DELETE FROM logins WHERE hidden = 1") # delete all of the old entries from the table
         dbCursorMem.execute("DELETE FROM undo")
         
         dbConnMem.commit()
@@ -356,34 +359,40 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()]
 
         menu = QtGui.QMenu()
-        openURL = menu.addAction("Open URL")
-        copyUN = menu.addAction("Copy username")
-        copyEM = menu.addAction("Copy E-Mail")
-        copyPW = menu.addAction("Copy password")
-        menu.addSeparator()
-        edit = menu.addAction("Edit entry")
-        delete = menu.addAction("Delete entry")
-
-        if indexList:
+        if indexList: # menu for when item selected
+            openURL = menu.addAction("Open URL")
+            copyUN = menu.addAction("Copy username")
+            copyEM = menu.addAction("Copy E-Mail")
+            copyPW = menu.addAction("Copy password")
+            menu.addSeparator()
+            edit = menu.addAction("Edit entry")
+            delete = menu.addAction("Delete entry")
             action = menu.exec_(self.loginTable.viewport().mapToGlobal(position))
-        else:
-            action = None
 
-        if action == openURL:
-            for index in indexList:
-                QtGui.QDesktopServices.openUrl(QtCore.QUrl(self.loginTable.item(index, 1).text()))
-        elif action == copyUN:
-            QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 2).text())
-        elif action == copyEM:
-            QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 3).text())
-        elif action == copyPW:
-            QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 4).text())
-        elif action == edit:
-            self.editEntry()
-        elif action == delete:
-            self.removeEntry()
-        else:
-            return None
+            if action == openURL:
+                for index in indexList:
+                    QtGui.QDesktopServices.openUrl(QtCore.QUrl(self.loginTable.item(index, 1).text()))
+            elif action == copyUN:
+                QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 2).text())
+            elif action == copyEM:
+                QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 3).text())
+            elif action == copyPW:
+                QtGui.QApplication.clipboard().setText(self.loginTable.item(indexList[0], 4).text())
+            elif action == edit:
+                self.editEntry()
+            elif action == delete:
+                self.removeEntry()
+            else:
+                return None
+
+        else: # for when user has not selected any items
+            addEntry = menu.addAction("Add entry")
+            action = menu.exec_(self.loginTable.viewport().mapToGlobal(position))
+        
+            if action == addEntry:
+                self.addEntry()
+            else:
+                return None
 
     def about(self):
         aboutBox = QtGui.QMessageBox()
@@ -407,7 +416,7 @@ class editEntryDialog(QtGui.QDialog):
 
 def main():
     app = QtGui.QApplication(["Pastword"]) # sets the name of the application
-    if platform.system() == "Windows": #if on windows set style to Cleanlooks
+    if platform.system() == "Windows": # if on windows set style to Cleanlooks
         app.setStyle("Cleanlooks")
     window = mainWindow()
     window.show()
