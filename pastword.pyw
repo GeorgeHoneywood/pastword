@@ -192,7 +192,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         if searchQ is None: # if not a search, return all values
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
         else:
-            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE site LIKE ? OR username LIKE ? OR email LIKE ? OR notes LIKE ? AND hidden = 0", (searchQ, searchQ, searchQ, searchQ))
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE (site LIKE ? OR username LIKE ? OR email LIKE ? OR notes LIKE ?) AND hidden = 0", (searchQ, searchQ, searchQ, searchQ))
         return dbCursorMem.fetchall()
 
     def updateTable(self, searchQ = None):
@@ -301,11 +301,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             warningBox("Please open or create a DB before trying to search it.", None)
             return None
 
-        searchQ = self.txtSearch.text()
-        if not searchQ: # if nothing in text box, return none for query
-            searchQ = None
-        else:
-            searchQ = "{}{}{}".format("%", searchQ, "%")
+        searchQ = None
+        if self.txtSearch.text():
+            searchQ = "{}{}{}".format("%", self.txtSearch.text(), "%")
+
         self.updateTable(searchQ)
 
     def autoSearch(self, state):
@@ -340,13 +339,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
     def lastItemToUndo(self):
         dbCursorMem.execute("SELECT login_id FROM undo WHERE undo_id = (SELECT MAX(login_id) FROM undo)")
-        lastItem = dbCursorMem.fetchone()
-
-        return lastItem
+        return dbCursorMem.fetchone()
 
     def addToUndoTable(self, item):
-        item = (None, item)
-        dbCursorMem.execute("INSERT INTO undo VALUES (?, ?)", item)
+        dbCursorMem.execute("INSERT INTO undo VALUES (?, ?)", (None, item))
         dbConnMem.commit()
 
     def removeOldEntries(self):
@@ -355,7 +351,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         
         dbConnMem.commit()
 
-    def contextMenu(self, position):
+    def contextMenu(self, position): #creates a context menu for when user does a right click
         indexList = [index.row() for index in self.loginTable.selectionModel().selectedRows()]
 
         menu = QtGui.QMenu()
@@ -394,7 +390,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             else:
                 return None
 
-    def about(self):
+    def about(self): # creates a message box for stuff about the program
         aboutBox = QtGui.QMessageBox()
         aboutBox.setIcon(QtGui.QMessageBox.Information)
         aboutBox.setWindowTitle("About Pastword")
@@ -404,7 +400,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
         aboutBox.exec_()
 
-class editEntryDialog(QtGui.QDialog):
+class editEntryDialog(QtGui.QDialog): # class for the edit dialog for entries
     def __init__(self, mainWindow):
         QtGui.QDialog.__init__(self)
         uic.loadUi(findDataFile("editEntry.ui"), self)
@@ -414,16 +410,15 @@ class editEntryDialog(QtGui.QDialog):
 
         self.pbEditPWGen.clicked.connect(mainWindow.passwordGenerator)
 
-def main():
+def main(): # main loop of the program, instantiates the application object
     app = QtGui.QApplication(["Pastword"]) # sets the name of the application
     if platform.system() == "Windows": # if on windows set style to Cleanlooks
         app.setStyle("Cleanlooks")
-    window = mainWindow()
-    window.show()
-    try:
-        sys.exit(app.exec_())
-    except SystemExit:
-        print("Exiting program")
 
-if __name__ == "__main__":
+    window = mainWindow() # create and show the main window of the program
+    window.show()
+
+    sys.exit(app.exec_()) # app.exec_() starts the program, sys.exit() is used to give an exit code
+    
+if __name__ == "__main__": # only run the main module when the program is run directly, rather than imported as a module
     main()
