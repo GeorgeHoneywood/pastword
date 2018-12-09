@@ -12,3 +12,5 @@ Here is a small list of improvements or features that I need to add to my progra
 * Half done - still need to do redo - Implement undo/redo with a new column, and a stack which holds entries that have been changed. Still need to do undo for new entries. Also undo seems to now be broken :/
 * If you cannot answer password correct, you get stuck in a loop.
 * For some reason you see extra entries when searching. Think it is an issue with my sql query.
+* Could impliment groups of passwords, using different tables for different groups, or just using a "group" field. The table would only display the selected group.
+* Should probably change undo, so that entries store a reference to their parent. That would mean we know which one to show again.
