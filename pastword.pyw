@@ -72,6 +72,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
+        self.groupList.clicked.connect(self.addGroup)
+
     def newDB(self):
         global dbName, dbOpen, salt # allows me to interact with some global variables
         self.closeFile() # ensure that the previous tables and flags are cleared
@@ -389,6 +391,11 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
                 self.addEntry()
             else:
                 return None
+
+    def addGroup(self):
+        for loop in range(10):
+            item = QtGui.QListWidgetItem("Item {}".format(loop))
+            self.groupList.addItem(item)
 
     def about(self): # creates a message box for stuff about the program
         aboutBox = QtGui.QMessageBox()
