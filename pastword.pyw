@@ -73,6 +73,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
         self.groupList.clicked.connect(self.addGroup)
+        self.txtGroups.returnPressed.connect(self.addGroup)
 
     def newDB(self):
         global dbName, dbOpen, salt # allows me to interact with some global variables
@@ -393,12 +394,16 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             else:
                 return None
 
+    def updateGroups(self):
+        dbCursorMem.execute("SELECT group_name FROM groups")
+
+        for group in dbCursorMem.fetchall():
+            self.groupList.addItem(str(group[0])
+
     def addGroup(self):
-        item = #group add
-        dbCursorMem.execute("INSERT INTO undo VALUES (?, ?)", (None, item))
-        for loop in range(10):
-            item = QtGui.QListWidgetItem("Item {}".format(loop))
-            self.groupList.addItem(item)
+        item = self.txtGroups.text()
+        dbCursorMem.execute("INSERT INTO groups VALUES (?, ?)", (None, item))
+        self.updateGroups()
 
     def about(self): # creates a message box for stuff about the program
         aboutBox = QtGui.QMessageBox()
