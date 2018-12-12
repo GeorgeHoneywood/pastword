@@ -90,7 +90,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
         self.setTitle() # set the window title to that of the opened file
 
-        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN)") # create the tables in the memory database
+        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS groups (group_id INTEGER PRIMARY KEY, group_name TEXT)")
+        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN, group_id INTEGER, FOREIGN KEY(group_id) REFERENCES groups(group_id))") # create the tables in the memory database
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
         dbConnMem.commit() # commit actually makes the changes to the database
 
@@ -393,6 +394,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
                 return None
 
     def addGroup(self):
+        item = #group add
+        dbCursorMem.execute("INSERT INTO undo VALUES (?, ?)", (None, item))
         for loop in range(10):
             item = QtGui.QListWidgetItem("Item {}".format(loop))
             self.groupList.addItem(item)
