@@ -195,7 +195,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
     def returnItems(self, searchQ):
         if searchQ is None: # if not a search, return all values
-            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins INNER JOIN groups ON group_id = group_id WHERE (hidden = 0) AND (group = ?)", selectedGroup)
         else:
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE (site LIKE ? OR username LIKE ? OR email LIKE ? OR notes LIKE ?) AND hidden = 0", (searchQ, searchQ, searchQ, searchQ))
         return dbCursorMem.fetchall()
@@ -419,7 +419,6 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         global selectedGroup
 
         selectedGroup = self.groupList.currentItem().text()
-        pass
 
     def about(self): # creates a message box for stuff about the program
         aboutBox = QtGui.QMessageBox()
