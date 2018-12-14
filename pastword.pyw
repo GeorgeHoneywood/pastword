@@ -28,6 +28,7 @@ dbName = "" # make file name global variable
 dbOpen = False # used to find whether a db is open or not
 password = "" # used to temp store the users password, so can be kdf'd
 salt = "" # store salt used for encryption and decryption
+selectedGroup = ""
 
 dbConnMem, dbCursorMem = dbConnect() # create a connection to a database in memory
 
@@ -72,7 +73,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
-        self.groupList.clicked.connect(self.addGroup)
+        self.groupList.clicked.connect(self.setGroup)
         self.txtGroups.returnPressed.connect(self.addGroup)
 
     def newDB(self):
@@ -397,13 +398,28 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
     def updateGroups(self):
         dbCursorMem.execute("SELECT group_name FROM groups")
 
+        self.groupList.clear()
         for group in dbCursorMem.fetchall():
-            self.groupList.addItem(str(group[0])
+            self.groupList.addItem(group[0])
 
     def addGroup(self):
-        item = self.txtGroups.text()
-        dbCursorMem.execute("INSERT INTO groups VALUES (?, ?)", (None, item))
+        if not dbOpen:
+            warningBox("Please select a file", None)
+            return None
+        group = self.txtGroups.text()
+        if group:
+            dbCursorMem.execute("INSERT INTO groups VALUES (?, ?)", (None, group))
+        else:
+            warningBox("Please name the group", None)
         self.updateGroups()
+
+        self.txtGroups.clear()
+
+    def setGroup(self):
+        global selectedGroup
+
+        selectedGroup = self.groupList.currentItem().text()
+        pass
 
     def about(self): # creates a message box for stuff about the program
         aboutBox = QtGui.QMessageBox()
