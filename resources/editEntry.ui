@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>543</width>
-    <height>253</height>
+    <height>277</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>500000</height>
+    <height>277</height>
    </size>
   </property>
   <property name="baseSize">
@@ -72,46 +72,119 @@
    <item row="2" column="1">
     <widget class="QLineEdit" name="txtEmail"/>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="lblPassword">
      <property name="text">
       <string>Password</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QLineEdit" name="txtPassword"/>
-   </item>
-   <item row="4" column="1">
-    <widget class="QPushButton" name="pbEditPWGen">
-     <property name="text">
-      <string>Generate password</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
+   <item row="6" column="0">
     <widget class="QLabel" name="lblNotes">
      <property name="text">
       <string>Notes</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
+   <item row="6" column="1">
     <widget class="QLineEdit" name="txtNotes"/>
    </item>
-   <item row="6" column="0">
+   <item row="8" column="0">
+    <widget class="QLabel" name="lblGroup">
+     <property name="text">
+      <string>Group</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
     <widget class="QPushButton" name="pbCancel">
      <property name="text">
       <string>Cancel</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="1">
+   <item row="9" column="1">
     <widget class="QPushButton" name="pbAccept">
      <property name="text">
       <string>Accept changes</string>
      </property>
     </widget>
+   </item>
+   <item row="8" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="txtGroup">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cbGroup">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>40</width>
+         <height>0</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>grp1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>grp2</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="txtPassword">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>4</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbEditPWGen">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Generate password</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -119,7 +192,6 @@
   <tabstop>txtSite</tabstop>
   <tabstop>txtUsername</tabstop>
   <tabstop>txtEmail</tabstop>
-  <tabstop>txtPassword</tabstop>
   <tabstop>txtNotes</tabstop>
   <tabstop>pbAccept</tabstop>
   <tabstop>pbCancel</tabstop>
