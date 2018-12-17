@@ -92,8 +92,15 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
         self.setTitle() # set the window title to that of the opened file
 
-        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS groups (group_id INTEGER PRIMARY KEY, group_name TEXT)")
-        dbCursorMem.execute("CREATE TABLE IF NOT EXISTS logins (login_id INTEGER PRIMARY KEY, site TEXT, username TEXT, email TEXT, password TEXT, notes TEXT, hidden BOOLEAN, group_id INTEGER, FOREIGN KEY(group_id) REFERENCES groups(group_id))") # create the tables in the memory database
+        dbCursorMem.execute('''CREATE TABLE IF NOT EXISTS logins
+                                    (login_id INTEGER PRIMARY KEY,
+                                    site TEXT,
+                                    username TEXT,
+                                    email TEXT,
+                                    password TEXT,
+                                    notes TEXT,
+                                    group_name TEXT,
+                                    hidden BOOLEAN)''') # create the tables in the memory database
         dbCursorMem.execute("CREATE TABLE IF NOT EXISTS undo (undo_id INTEGER PRIMARY KEY, login_id INTEGER)")
         dbConnMem.commit() # commit actually makes the changes to the database
 
@@ -195,7 +202,10 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
 
     def returnItems(self, searchQ):
         if searchQ is None: # if not a search, return all values
-            dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins INNER JOIN groups ON group_id = group_id WHERE (hidden = 0) AND (group = ?)", selectedGroup)
+            if not selectedGroup:
+                 dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0")
+            else:
+                dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE hidden = 0 AND group_name = ?", (selectedGroup, ))
         else:
             dbCursorMem.execute("SELECT login_id, site, username, email, password, notes FROM logins WHERE (site LIKE ? OR username LIKE ? OR email LIKE ? OR notes LIKE ?) AND hidden = 0", (searchQ, searchQ, searchQ, searchQ))
         return dbCursorMem.fetchall()
@@ -268,7 +278,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.editPopup.exec_()
     
     def acceptEntry(self):
-        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), 0) # None so that it auto allocates an ID, 0 so that it is not marked as hidden
+        loginData = (None, self.editPopup.txtSite.text(), self.editPopup.txtUsername.text(), self.editPopup.txtEmail.text(), self.editPopup.txtPassword.text(), self.editPopup.txtNotes.text(), selectedGroup, 0) # None so that it auto allocates an ID, 0 so that it is not marked as hidden
 
         if not dbOpen:
             warningBox("Please open or create a DB before trying to edit it.", None)
@@ -278,7 +288,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         indexList = self.loginTable.selectionModel().selectedRows()
         if not indexList: # if there are not not rows selcted, add an entry
 
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData)
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?, ?)", loginData)
             
         else: # if the user has selected a row
             indexTable = indexList[0].row()
@@ -287,7 +297,7 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
             dbConnMem.commit()
             self.addToUndoTable(indexDB) # add this entry to the undo list
 
-            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?)", loginData) # add a new entry
+            dbCursorMem.execute("INSERT INTO logins VALUES (?, ?, ?, ?, ?, ?, ?, ?)", loginData) # add a new entry
             dbConnMem.commit()
             self.addToUndoTable(dbCursorMem.lastrowid)
         
@@ -396,23 +406,19 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
                 return None
 
     def updateGroups(self):
-        dbCursorMem.execute("SELECT group_name FROM groups")
-
         self.groupList.clear()
-        for group in dbCursorMem.fetchall():
-            self.groupList.addItem(group[0])
+        alreadyAdded = []
+
+        for group in dbCursorMem.execute('SELECT group_name FROM logins'):
+            if group not in alreadyAdded:
+                alreadyAdded.append(group)
+                self.groupList.addItem(group[0])            
 
     def addGroup(self):
-        if not dbOpen:
-            warningBox("Please select a file", None)
-            return None
-        group = self.txtGroups.text()
-        if group:
-            dbCursorMem.execute("INSERT INTO groups VALUES (?, ?)", (None, group))
-        else:
-            warningBox("Please name the group", None)
-        self.updateGroups()
+        global selectedGroup
+        selectedGroup = self.txtGroups.text()
 
+        self.updateGroups()
         self.txtGroups.clear()
 
     def setGroup(self):
