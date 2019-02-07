@@ -73,8 +73,8 @@ class mainWindow(QtGui.QMainWindow, Ui_MainWindow): # class for the main window 
         self.txtSearch.textChanged.connect(self.searchDB)
         self.cbAutoSearch.stateChanged.connect(self.autoSearch)
 
-        self.groupList.clicked.connect(self.setGroup)
-        self.txtGroups.returnPressed.connect(self.addGroup)
+        # self.groupList.clicked.connect(self.setGroup)
+        # self.txtGroups.returnPressed.connect(self.addGroup)
 
     def newDB(self):
         global dbName, dbOpen, salt # allows me to interact with some global variables
